@@ -120,7 +120,7 @@ class ApplicationController < ActionController::Base
         end
       }
       format.json {
-        render json: { error: exception.record.errors }, status: :unprocessable_entity
+        render json: { error: exception.record.errors }, status: :unprocessable_content
       }
     end
   end

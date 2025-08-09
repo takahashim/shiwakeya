@@ -34,7 +34,7 @@ class SpreadsheetsController < ApplicationController
         @spreadsheet.sync_sheets
         redirect_to @spreadsheet, notice: "スプレッドシートを登録しました"
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     rescue Google::Apis::ClientError => e
       # より詳細なエラーメッセージ
@@ -45,7 +45,7 @@ class SpreadsheetsController < ApplicationController
                          "3. Google Sheets APIが有効になっているか"
       Rails.logger.error "Failed to find spreadsheet with ID: #{@spreadsheet.spreadsheet_id}"
       Rails.logger.error "Error: #{e.message}"
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
