@@ -140,6 +140,10 @@ GEM
       signet (>= 0.16, < 2.a)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
+    importmap-rails (2.2.2)
+      actionpack (>= 6.0.0)
+      activesupport (>= 6.0.0)
+      railties (>= 6.0.0)
     io-console (0.8.1)
     irb (1.15.2)
       pp (>= 0.6.0)
@@ -360,6 +364,9 @@ GEM
     thruster (0.1.15-x86_64-linux)
     timeout (0.4.3)
     trailblazer-option (0.1.2)
+    turbo-rails (2.0.16)
+      actionpack (>= 7.1.0)
+      railties (>= 7.1.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     uber (0.1.0)
@@ -397,6 +404,7 @@ DEPENDENCIES
   dotenv-rails
   google-apis-sheets_v4
   googleauth
+  importmap-rails (~> 2.2)
   kamal
   propshaft
   puma (>= 5.0)
@@ -408,6 +416,7 @@ DEPENDENCIES
   sqlite3 (>= 2.1)
   tailwindcss-rails
   thruster
+  turbo-rails (~> 2.0)
   tzinfo-data
   web-console
 

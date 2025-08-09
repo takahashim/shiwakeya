@@ -3,7 +3,6 @@ class ServiceSheets::SyncsController < ApplicationController
   before_action :set_service_spreadsheet
   before_action :set_service_sheet
   before_action :check_spreadsheet_access_permission
-  before_action :check_spreadsheet_edit_access
 
   def create
     @service_sheet.sync_data
@@ -23,9 +22,5 @@ class ServiceSheets::SyncsController < ApplicationController
 
   def check_spreadsheet_access_permission
     check_spreadsheet_access(@service_spreadsheet)
-  end
-
-  def check_spreadsheet_edit_access
-    check_spreadsheet_edit_permission(@service_spreadsheet)
   end
 end

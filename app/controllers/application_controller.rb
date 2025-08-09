@@ -58,12 +58,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def check_spreadsheet_edit_permission(spreadsheet)
-    unless current_user.can_edit_spreadsheet?(spreadsheet)
-      redirect_to root_path, alert: "このスプレッドシートの編集権限がありません"
-    end
-  end
-
   # エラーハンドリングメソッド
   def handle_standard_error(exception)
     Rails.logger.error "StandardError: #{exception.message}"

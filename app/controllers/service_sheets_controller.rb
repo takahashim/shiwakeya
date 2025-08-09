@@ -3,7 +3,6 @@ class ServiceSheetsController < ApplicationController
   before_action :set_service_spreadsheet
   before_action :check_spreadsheet_access_permission
   before_action :set_service_sheet, only: [ :show, :update ]
-  before_action :check_spreadsheet_edit_access, only: [ :update ]
 
   def show
     @data = @service_sheet.parsed_data
@@ -39,9 +38,5 @@ class ServiceSheetsController < ApplicationController
 
   def check_spreadsheet_access_permission
     check_spreadsheet_access(@service_spreadsheet)
-  end
-
-  def check_spreadsheet_edit_access
-    check_spreadsheet_edit_permission(@service_spreadsheet)
   end
 end

@@ -4,16 +4,19 @@ class ServiceSheets::ClearsController < ApplicationController
   before_action :set_service_spreadsheet
   before_action :set_service_sheet
   before_action :check_spreadsheet_access_permission
-  before_action :check_spreadsheet_edit_access
 
   def destroy
-    if @service_sheet.clear_all_data
+    if @service_sheet.clear_local_data
       redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
                   notice: "データをクリアしました"
     else
       redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
                   alert: "データのクリアに失敗しました"
     end
+  rescue => e
+    Rails.logger.error "Error clearing local data: #{e.message}"
+    redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
+                alert: "データのクリアに失敗しました: #{e.message}"
   end
 
   private
@@ -28,9 +31,5 @@ class ServiceSheets::ClearsController < ApplicationController
 
   def check_spreadsheet_access_permission
     check_spreadsheet_access(@service_spreadsheet)
-  end
-
-  def check_spreadsheet_edit_access
-    check_spreadsheet_edit_permission(@service_spreadsheet)
   end
 end

@@ -11,20 +11,12 @@ class User < ApplicationRecord
     admin: 2
   }, prefix: true
 
-  # スプレッドシートへのアクセス権限を確認
+  # スプレッドシートへのアクセス権限を確認（アクセス可能＝編集可能）
   def can_access_spreadsheet?(spreadsheet)
     return true if role_admin? || role_accountant?
     return false unless spreadsheet
 
     user_spreadsheet_permissions.exists?(service_spreadsheet: spreadsheet)
-  end
-
-  # スプレッドシートの編集権限を確認
-  def can_edit_spreadsheet?(spreadsheet)
-    return true if role_admin? || role_accountant?
-    return false unless spreadsheet
-
-    user_spreadsheet_permissions.where(service_spreadsheet: spreadsheet, can_edit: true).exists?
   end
 
   # アクセス可能なスプレッドシート一覧を取得

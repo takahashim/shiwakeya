@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_120832) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_122824) do
   create_table "service_sheets", force: :cascade do |t|
     t.integer "service_spreadsheet_id", null: false
     t.string "sheet_name"
@@ -35,7 +35,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_120832) do
   create_table "user_spreadsheet_permissions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "service_spreadsheet_id", null: false
-    t.boolean "can_edit", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["service_spreadsheet_id"], name: "index_user_spreadsheet_permissions_on_service_spreadsheet_id"

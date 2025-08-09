@@ -49,11 +49,11 @@ class ServiceSheet < ApplicationRecord
     service.append_values(range, [ row_data ], service_spreadsheet.spreadsheet_id)
   end
 
-  def clear_all_data
-    service = ServiceAccountSheetsService.new
-    # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
-    escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
-    range = "#{escaped_sheet_name}!A:Z"
-    service.clear_values(range, service_spreadsheet.spreadsheet_id)
+  # ローカルのデータベースに保存されているデータをクリア（スプレッドシートのデータは削除しない）
+  def clear_local_data
+    update!(
+      data: nil,
+      last_synced_at: nil
+    )
   end
 end
