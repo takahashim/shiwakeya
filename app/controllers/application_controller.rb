@@ -72,7 +72,7 @@ class ApplicationController < ActionController::Base
     respond_to do |format|
       format.html {
         # redirect_backは無限ループの原因になるため、条件分岐
-        if request.path == root_path || request.path == '/'
+        if request.path == root_path || request.path == "/"
           render plain: "エラーが発生しました: #{exception.message}", status: :internal_server_error
         else
           redirect_to root_path, alert: "エラーが発生しました: #{exception.message}"

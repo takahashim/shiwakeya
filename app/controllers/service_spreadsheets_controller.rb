@@ -21,18 +21,22 @@ class ServiceSpreadsheetsController < ApplicationController
 
     # スプレッドシートの存在確認
     service = ServiceAccountSheetsService.new
-    spreadsheet = service.get_spreadsheet(@service_spreadsheet.spreadsheet_id)
 
-    if spreadsheet
-      @service_spreadsheet.name ||= spreadsheet.properties.title
+    begin
+      spreadsheet = service.get_spreadsheet(@service_spreadsheet.spreadsheet_id)
+
+      # 名前が入力されていない場合は、スプレッドシートのタイトルを使用
+      if @service_spreadsheet.name.blank?
+        @service_spreadsheet.name = spreadsheet.properties.title
+      end
 
       if @service_spreadsheet.save
         @service_spreadsheet.sync_sheets
         redirect_to @service_spreadsheet, notice: "スプレッドシートを登録しました"
       else
-        render :new
+        render :new, status: :unprocessable_entity
       end
-    else
+    rescue Google::Apis::ClientError => e
       # より詳細なエラーメッセージ
       flash.now[:alert] = "指定されたスプレッドシートIDが見つかりません。\n" \
                          "以下を確認してください：\n" \
@@ -40,7 +44,8 @@ class ServiceSpreadsheetsController < ApplicationController
                          "2. サービスアカウントにスプレッドシートが共有されているか\n" \
                          "3. Google Sheets APIが有効になっているか"
       Rails.logger.error "Failed to find spreadsheet with ID: #{@service_spreadsheet.spreadsheet_id}"
-      render :new
+      Rails.logger.error "Error: #{e.message}"
+      render :new, status: :unprocessable_entity
     end
   end
 
