@@ -34,7 +34,7 @@ class UserPermissionsController < ApplicationController
   end
 
   def update_spreadsheet_permissions
-    return unless @user.member?
+    return unless @user.role_member?
 
     existing_permissions = @user.user_spreadsheet_permissions.index_by(&:service_spreadsheet_id)
 

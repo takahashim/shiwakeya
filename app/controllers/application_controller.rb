@@ -23,15 +23,15 @@ class ApplicationController < ActionController::Base
   end
 
   def admin?
-    current_user&.admin?
+    current_user&.role_admin?
   end
 
   def accountant?
-    current_user&.accountant?
+    current_user&.role_accountant?
   end
 
   def member?
-    current_user&.member?
+    current_user&.role_member?
   end
 
   def require_login
@@ -71,7 +71,12 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html {
-        redirect_back(fallback_location: root_path, alert: "エラーが発生しました: #{exception.message}")
+        # redirect_backは無限ループの原因になるため、条件分岐
+        if request.path == root_path || request.path == '/'
+          render plain: "エラーが発生しました: #{exception.message}", status: :internal_server_error
+        else
+          redirect_to root_path, alert: "エラーが発生しました: #{exception.message}"
+        end
       }
       format.json {
         render json: { error: exception.message }, status: :internal_server_error
@@ -97,7 +102,11 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html {
-        redirect_back(fallback_location: root_path, alert: "必要なパラメータが不足しています")
+        if request.referrer && request.referrer != request.url
+          redirect_to request.referrer, alert: "必要なパラメータが不足しています"
+        else
+          redirect_to root_path, alert: "必要なパラメータが不足しています"
+        end
       }
       format.json {
         render json: { error: "必要なパラメータが不足しています: #{exception.param}" }, status: :bad_request
@@ -110,7 +119,11 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html {
-        redirect_back(fallback_location: root_path, alert: "データの保存に失敗しました: #{exception.record.errors.full_messages.join(', ')}")
+        if request.referrer && request.referrer != request.url
+          redirect_to request.referrer, alert: "データの保存に失敗しました: #{exception.record.errors.full_messages.join(', ')}"
+        else
+          redirect_to root_path, alert: "データの保存に失敗しました: #{exception.record.errors.full_messages.join(', ')}"
+        end
       }
       format.json {
         render json: { error: exception.record.errors }, status: :unprocessable_entity
@@ -148,7 +161,11 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html {
-        redirect_back(fallback_location: root_path, alert: error_message)
+        if request.referrer && request.referrer != request.url
+          redirect_to request.referrer, alert: error_message
+        else
+          redirect_to root_path, alert: error_message
+        end
       }
       format.json {
         render json: { error: error_message }, status: :service_unavailable

@@ -13,16 +13,16 @@ class SessionsController < ApplicationController
       # 新規ユーザーとして作成
       email = params[:email]&.downcase
       # 環境変数のADMIN_EMAILと一致する場合は管理者として作成
-      role = (email == ENV["ADMIN_EMAIL"]) ? "admin" : "member"
+      is_admin = (email == ENV["ADMIN_EMAIL"])
 
       user = User.create!(
         email: email,
         name: email.split("@")&.first,
-        role: role
+        role: is_admin ? :admin : :member
       )
       session[:user_id] = user.id
 
-      if role == "admin"
+      if is_admin
         redirect_to root_path, notice: "管理者アカウントを作成してログインしました"
       else
         redirect_to root_path, notice: "アカウントを作成してログインしました"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_084346) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_120832) do
   create_table "service_sheets", force: :cascade do |t|
     t.integer "service_spreadsheet_id", null: false
     t.string "sheet_name"
@@ -46,10 +46,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_084346) do
   create_table "users", force: :cascade do |t|
     t.string "email", null: false
     t.string "name"
-    t.string "role", default: "member"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "role", default: 0
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["role"], name: "index_users_on_role"
   end
 
   add_foreign_key "service_sheets", "service_spreadsheets"

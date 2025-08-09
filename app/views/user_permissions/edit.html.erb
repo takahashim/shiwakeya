@@ -28,7 +28,7 @@
           </div>
         </div>
 
-        <div class="mb-6" id="spreadsheet-permissions" style="<%= @user.member? ? '' : 'display: none;' %>">
+        <div class="mb-6" id="spreadsheet-permissions" style="<%= @user.role_member? ? '' : 'display: none;' %>">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             スプレッドシートアクセス権限
           </label>
