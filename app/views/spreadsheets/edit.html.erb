@@ -4,12 +4,12 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-6">
-    <%= form_with model: @service_spreadsheet, local: true do |f| %>
-      <% if @service_spreadsheet.errors.any? %>
+    <%= form_with model: @spreadsheet, local: true do |f| %>
+      <% if @spreadsheet.errors.any? %>
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <h3 class="text-red-800 font-semibold mb-2">エラーが発生しました</h3>
           <ul class="list-disc list-inside text-red-700">
-            <% @service_spreadsheet.errors.full_messages.each do |message| %>
+            <% @spreadsheet.errors.full_messages.each do |message| %>
               <li><%= message %></li>
             <% end %>
           </ul>
@@ -65,22 +65,22 @@
         <dl class="text-sm">
           <div class="flex">
             <dt class="text-gray-500 w-32">登録日時:</dt>
-            <dd class="text-gray-900"><%= @service_spreadsheet.created_at.strftime("%Y/%m/%d %H:%M") %></dd>
+            <dd class="text-gray-900"><%= @spreadsheet.created_at.strftime("%Y/%m/%d %H:%M") %></dd>
           </div>
           <div class="flex mt-1">
             <dt class="text-gray-500 w-32">最終更新:</dt>
-            <dd class="text-gray-900"><%= @service_spreadsheet.updated_at.strftime("%Y/%m/%d %H:%M") %></dd>
+            <dd class="text-gray-900"><%= @spreadsheet.updated_at.strftime("%Y/%m/%d %H:%M") %></dd>
           </div>
           <div class="flex mt-1">
             <dt class="text-gray-500 w-32">シート数:</dt>
-            <dd class="text-gray-900"><%= @service_spreadsheet.service_sheets.count %></dd>
+            <dd class="text-gray-900"><%= @spreadsheet.sheets.count %></dd>
           </div>
         </dl>
       </div>
 
       <div class="mt-8 flex justify-between">
         <div>
-          <%= link_to "削除", service_spreadsheet_path(@service_spreadsheet),
+          <%= link_to "削除", spreadsheet_path(@spreadsheet),
               data: { 
                 turbo_method: :delete,
                 turbo_confirm: "本当に削除しますか？関連するシートデータも全て削除されます。"
@@ -88,7 +88,7 @@
               class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" %>
         </div>
         <div class="flex space-x-4">
-          <%= link_to "キャンセル", service_spreadsheet_path(@service_spreadsheet), 
+          <%= link_to "キャンセル", spreadsheet_path(@spreadsheet), 
               class: "px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" %>
           <%= f.submit "更新", 
               class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>

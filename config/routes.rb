@@ -17,17 +17,17 @@ Rails.application.routes.draw do
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
 
-  # Service Spreadsheets
-  resources :service_spreadsheets do
+  # Spreadsheets
+  resources :spreadsheets do
     # Sync action for spreadsheet
-    resource :sync, only: [ :create ], controller: "service_spreadsheets/syncs"
+    resource :sync, only: [ :create ], controller: "spreadsheets/syncs"
 
-    # Service Sheets (nested under service_spreadsheets)
-    resources :service_sheets, only: [ :show, :update ] do
+    # Sheets (nested under spreadsheets)
+    resources :sheets, only: [ :show, :update ] do
       # Nested controllers for specific sheet actions
-      resource :sync, only: [ :create ], controller: "service_sheets/syncs"
-      resource :append, only: [ :create ], controller: "service_sheets/appends"
-      resource :clear, only: [ :destroy ], controller: "service_sheets/clears"
+      resource :sync, only: [ :create ], controller: "sheets/syncs"
+      resource :append, only: [ :create ], controller: "sheets/appends"
+      resource :clear, only: [ :destroy ], controller: "sheets/clears"
     end
   end
 

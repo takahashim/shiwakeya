@@ -1,6 +1,6 @@
 class UserSpreadsheetPermission < ApplicationRecord
   belongs_to :user
-  belongs_to :service_spreadsheet
+  belongs_to :spreadsheet
 
-  validates :user_id, uniqueness: { scope: :service_spreadsheet_id }
+  validates :user_id, uniqueness: { scope: :spreadsheet_id }
 end

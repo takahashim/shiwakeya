@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900">ダッシュボード</h1>
-    <p class="mt-2 text-gray-600">スプレッドシート管理システム</p>
+    <p class="mt-2 text-gray-600">会計データ統合管理システム</p>
   </div>
 
   <% if ENV['GOOGLE_SERVICE_ACCOUNT_JSON'].present? %>
@@ -12,23 +12,23 @@
           <div class="flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-900">登録済みスプレッドシート</h2>
             <% if admin? %>
-              <%= link_to "新規追加", new_service_spreadsheet_path,
+              <%= link_to "新規追加", new_spreadsheet_path,
                   class: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" %>
             <% end %>
           </div>
         </div>
         <div class="p-6">
-          <% if @service_spreadsheets.any? %>
+          <% if @spreadsheets.any? %>
             <div class="space-y-4">
-              <% @service_spreadsheets.each do |spreadsheet| %>
+              <% @spreadsheets.each do |spreadsheet| %>
                 <div class="border rounded-lg p-4 hover:bg-gray-50">
-                  <%= link_to service_spreadsheet_path(spreadsheet), class: "block" do %>
+                  <%= link_to spreadsheet_path(spreadsheet), class: "block" do %>
                     <h3 class="font-medium text-gray-900"><%= spreadsheet.name %></h3>
                     <p class="text-sm text-gray-600 mt-1">
                       <%= spreadsheet.description %>
                     </p>
                     <p class="text-xs text-gray-500 mt-1">
-                      シート数: <%= spreadsheet.service_sheets.count %>
+                      シート数: <%= spreadsheet.sheets.count %>
                     </p>
                   <% end %>
                 </div>
@@ -52,11 +52,11 @@
               <% @recent_sheets.each do |sheet| %>
                 <div class="flex items-center justify-between py-2 hover:bg-gray-50 rounded px-2">
                   <div>
-                    <%= link_to service_spreadsheet_service_sheet_path(sheet.service_spreadsheet, sheet),
+                    <%= link_to spreadsheet_sheet_path(sheet.spreadsheet, sheet),
                         class: "text-gray-900 hover:text-blue-600" do %>
                       <p class="font-medium"><%= sheet.sheet_name %></p>
                       <p class="text-xs text-gray-500">
-                        <%= sheet.service_spreadsheet.name %> | 
+                        <%= sheet.spreadsheet.name %> | 
                         <%= sheet.last_synced_at ? time_ago_in_words(sheet.last_synced_at) + "前" : "未同期" %>
                       </p>
                     <% end %>

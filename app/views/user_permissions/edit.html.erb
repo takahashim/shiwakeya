@@ -34,7 +34,7 @@
           </label>
           <div class="border rounded-lg divide-y">
             <% @spreadsheets.each do |spreadsheet| %>
-              <% permission = @user_permissions.find { |p| p.service_spreadsheet_id == spreadsheet.id } %>
+              <% permission = @user_permissions.find { |p| p.spreadsheet_id == spreadsheet.id } %>
               <div class="p-4">
                 <div class="flex items-center justify-between">
                   <div class="flex-1">

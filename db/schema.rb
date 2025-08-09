@@ -10,35 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_122824) do
-  create_table "service_sheets", force: :cascade do |t|
-    t.integer "service_spreadsheet_id", null: false
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_153252) do
+  create_table "sheets", force: :cascade do |t|
+    t.integer "spreadsheet_id", null: false
     t.string "sheet_name"
     t.string "purpose"
     t.datetime "last_synced_at"
     t.text "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["service_spreadsheet_id"], name: "index_service_sheets_on_service_spreadsheet_id"
+    t.index ["spreadsheet_id"], name: "index_sheets_on_spreadsheet_id"
   end
 
-  create_table "service_spreadsheets", force: :cascade do |t|
+  create_table "spreadsheets", force: :cascade do |t|
     t.string "name", null: false
     t.string "spreadsheet_id", null: false
     t.text "description"
     t.boolean "is_active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["spreadsheet_id"], name: "index_service_spreadsheets_on_spreadsheet_id", unique: true
+    t.index ["spreadsheet_id"], name: "index_spreadsheets_on_spreadsheet_id", unique: true
   end
 
   create_table "user_spreadsheet_permissions", force: :cascade do |t|
     t.integer "user_id", null: false
-    t.integer "service_spreadsheet_id", null: false
+    t.integer "spreadsheet_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["service_spreadsheet_id"], name: "index_user_spreadsheet_permissions_on_service_spreadsheet_id"
-    t.index ["user_id", "service_spreadsheet_id"], name: "index_user_spreadsheet_permissions_unique", unique: true
+    t.index ["spreadsheet_id"], name: "index_user_spreadsheet_permissions_on_spreadsheet_id"
+    t.index ["user_id", "spreadsheet_id"], name: "index_user_spreadsheet_permissions_unique", unique: true
     t.index ["user_id"], name: "index_user_spreadsheet_permissions_on_user_id"
   end
 
@@ -52,7 +52,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_122824) do
     t.index ["role"], name: "index_users_on_role"
   end
 
-  add_foreign_key "service_sheets", "service_spreadsheets"
-  add_foreign_key "user_spreadsheet_permissions", "service_spreadsheets"
+  add_foreign_key "sheets", "spreadsheets"
+  add_foreign_key "user_spreadsheet_permissions", "spreadsheets"
   add_foreign_key "user_spreadsheet_permissions", "users"
 end

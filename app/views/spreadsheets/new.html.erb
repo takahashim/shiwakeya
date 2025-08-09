@@ -4,12 +4,12 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-6">
-    <%= form_with model: @service_spreadsheet, local: true do |f| %>
-      <% if @service_spreadsheet.errors.any? %>
+    <%= form_with model: @spreadsheet, local: true do |f| %>
+      <% if @spreadsheet.errors.any? %>
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <h3 class="text-red-800 font-semibold mb-2">エラーが発生しました</h3>
           <ul class="list-disc list-inside text-red-700">
-            <% @service_spreadsheet.errors.full_messages.each do |message| %>
+            <% @spreadsheet.errors.full_messages.each do |message| %>
               <li><%= message %></li>
             <% end %>
           </ul>
@@ -78,7 +78,7 @@
       </div>
 
       <div class="mt-8 flex justify-end space-x-4">
-        <%= link_to "キャンセル", service_spreadsheets_path, 
+        <%= link_to "キャンセル", spreadsheets_path, 
             class: "px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" %>
         <%= f.submit "登録", 
             class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>

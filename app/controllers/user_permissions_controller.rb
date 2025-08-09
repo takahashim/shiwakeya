@@ -8,8 +8,8 @@ class UserPermissionsController < ApplicationController
   end
 
   def edit
-    @spreadsheets = ServiceSpreadsheet.all
-    @user_permissions = @user.user_spreadsheet_permissions.includes(:service_spreadsheet)
+    @spreadsheets = Spreadsheet.all
+    @user_permissions = @user.user_spreadsheet_permissions.includes(:spreadsheet)
   end
 
   def update
@@ -17,8 +17,8 @@ class UserPermissionsController < ApplicationController
       update_spreadsheet_permissions
       redirect_to user_permissions_path, notice: "ユーザー権限を更新しました"
     else
-      @spreadsheets = ServiceSpreadsheet.all
-      @user_permissions = @user.user_spreadsheet_permissions.includes(:service_spreadsheet)
+      @spreadsheets = Spreadsheet.all
+      @user_permissions = @user.user_spreadsheet_permissions.includes(:spreadsheet)
       render :edit
     end
   end
@@ -36,20 +36,20 @@ class UserPermissionsController < ApplicationController
   def update_spreadsheet_permissions
     return unless @user.role_member?
 
-    existing_permissions = @user.user_spreadsheet_permissions.index_by(&:service_spreadsheet_id)
+    existing_permissions = @user.user_spreadsheet_permissions.index_by(&:spreadsheet_id)
 
     params[:permissions]&.each do |spreadsheet_id, permission_params|
       next if permission_params[:grant] != "1"
 
       permission = existing_permissions[spreadsheet_id.to_i] ||
-                  @user.user_spreadsheet_permissions.build(service_spreadsheet_id: spreadsheet_id)
+                  @user.user_spreadsheet_permissions.build(spreadsheet_id: spreadsheet_id)
 
       permission.can_edit = permission_params[:can_edit] == "1"
       permission.save
     end
 
     params[:remove_permissions]&.each do |spreadsheet_id|
-      @user.user_spreadsheet_permissions.where(service_spreadsheet_id: spreadsheet_id).destroy_all
+      @user.user_spreadsheet_permissions.where(spreadsheet_id: spreadsheet_id).destroy_all
     end
   end
 end
