@@ -42,7 +42,7 @@ class ServiceSheet < ApplicationRecord
   end
 
   def append_row(row_data)
-    service = ServiceAccountSheetsService.new
+    service = GoogleSheetsClient.new
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
     escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A:Z"

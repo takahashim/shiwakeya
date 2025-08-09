@@ -2,14 +2,14 @@ require "google/apis/sheets_v4"
 require "googleauth"
 require "json"
 
-class ServiceAccountSheetsService
+class GoogleSheetsClient
   attr_reader :service
 
   def initialize
     @service = Google::Apis::SheetsV4::SheetsService.new
     @service.authorization = authorize
   rescue StandardError => e
-    Rails.logger.error "Failed to initialize ServiceAccountSheetsService: #{e.message}"
+    Rails.logger.error "Failed to initialize GoogleSheetsClient: #{e.message}"
     Rails.logger.error "Error details: #{e.inspect}"
     raise
   end

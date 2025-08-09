@@ -9,7 +9,7 @@ class ServiceSpreadsheet < ApplicationRecord
   scope :active, -> { where(is_active: true) }
 
   def sync_sheets
-    service = ServiceAccountSheetsService.new
+    service = GoogleSheetsClient.new
     spreadsheet = service.get_spreadsheet(spreadsheet_id)
 
     return unless spreadsheet
@@ -41,7 +41,7 @@ class ServiceSpreadsheet < ApplicationRecord
   end
 
   def fetch_sheet_data(sheet_name)
-    service = ServiceAccountSheetsService.new
+    service = GoogleSheetsClient.new
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
     escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A:Z"
@@ -54,7 +54,7 @@ class ServiceSpreadsheet < ApplicationRecord
   end
 
   def update_sheet_data(sheet_name, values)
-    service = ServiceAccountSheetsService.new
+    service = GoogleSheetsClient.new
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
     escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A1"

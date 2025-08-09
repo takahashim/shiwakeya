@@ -20,7 +20,7 @@ class ServiceSpreadsheetsController < ApplicationController
     @service_spreadsheet = ServiceSpreadsheet.new(service_spreadsheet_params)
 
     # スプレッドシートの存在確認
-    service = ServiceAccountSheetsService.new
+    service = GoogleSheetsClient.new
 
     begin
       spreadsheet = service.get_spreadsheet(@service_spreadsheet.spreadsheet_id)

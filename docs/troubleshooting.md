@@ -124,7 +124,7 @@ Railsコンソールで直接APIをテストします：
 rails console
 
 # サービスを初期化
-service = ServiceAccountSheetsService.new
+service = GoogleSheetsClient.new
 
 # スプレッドシートIDでテスト（実際のIDに置き換える）
 spreadsheet_id = "YOUR_SPREADSHEET_ID"
