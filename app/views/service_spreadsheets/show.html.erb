@@ -1,0 +1,66 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900"><%= @service_spreadsheet.name %></h1>
+        <p class="text-gray-600 mt-1"><%= @service_spreadsheet.description %></p>
+      </div>
+      <div class="flex space-x-2">
+        <%= button_to "同期", sync_service_spreadsheet_path(@service_spreadsheet),
+            method: :post,
+            class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+        <% if admin? %>
+          <%= link_to "編集", edit_service_spreadsheet_path(@service_spreadsheet),
+              class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+        <% end %>
+        <%= link_to "戻る", service_spreadsheets_path,
+            class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">シート一覧</h2>
+    </div>
+    
+    <% if @service_sheets.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @service_sheets.each do |sheet| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-medium text-gray-900">
+                  <%= link_to sheet.sheet_name, service_spreadsheet_service_sheet_path(@service_spreadsheet, sheet),
+                      class: "hover:text-blue-600" %>
+                </h3>
+                <p class="text-sm text-gray-600">
+                  用途: <%= sheet.purpose %> | 
+                  最終同期: <%= sheet.last_synced_at ? time_ago_in_words(sheet.last_synced_at) + "前" : "未同期" %>
+                </p>
+              </div>
+              <div class="flex space-x-2">
+                <%= link_to "表示", service_spreadsheet_service_sheet_path(@service_spreadsheet, sheet),
+                    class: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                <%= button_to "同期", sync_service_spreadsheet_service_sheet_path(@service_spreadsheet, sheet),
+                    method: :post,
+                    class: "px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-12 text-center">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">シートがありません</h3>
+        <p class="text-gray-600 mb-4">このスプレッドシートにはシートがないか、まだ同期されていません</p>
+        <%= button_to "スプレッドシートを同期", sync_service_spreadsheet_path(@service_spreadsheet),
+            method: :post,
+            class: "inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+      </div>
+    <% end %>
+  </div>
+</div>

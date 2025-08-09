@@ -1,0 +1,94 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">ダッシュボード</h1>
+    <p class="mt-2 text-gray-600">スプレッドシート管理システム</p>
+  </div>
+
+  <% if ENV['GOOGLE_SERVICE_ACCOUNT_JSON'].present? %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-900">登録済みスプレッドシート</h2>
+            <% if admin? %>
+              <%= link_to "新規追加", new_service_spreadsheet_path,
+                  class: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+            <% end %>
+          </div>
+        </div>
+        <div class="p-6">
+          <% if @service_spreadsheets.any? %>
+            <div class="space-y-4">
+              <% @service_spreadsheets.each do |spreadsheet| %>
+                <div class="border rounded-lg p-4 hover:bg-gray-50">
+                  <%= link_to service_spreadsheet_path(spreadsheet), class: "block" do %>
+                    <h3 class="font-medium text-gray-900"><%= spreadsheet.name %></h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                      <%= spreadsheet.description %>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      シート数: <%= spreadsheet.service_sheets.count %>
+                    </p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-4">
+              登録済みのスプレッドシートはありません
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">最近同期したシート</h2>
+        </div>
+        <div class="p-6">
+          <% if @recent_sheets.any? %>
+            <div class="space-y-3">
+              <% @recent_sheets.each do |sheet| %>
+                <div class="flex items-center justify-between py-2 hover:bg-gray-50 rounded px-2">
+                  <div>
+                    <%= link_to service_spreadsheet_service_sheet_path(sheet.service_spreadsheet, sheet),
+                        class: "text-gray-900 hover:text-blue-600" do %>
+                      <p class="font-medium"><%= sheet.sheet_name %></p>
+                      <p class="text-xs text-gray-500">
+                        <%= sheet.service_spreadsheet.name %> | 
+                        <%= sheet.last_synced_at ? time_ago_in_words(sheet.last_synced_at) + "前" : "未同期" %>
+                      </p>
+                    <% end %>
+                  </div>
+                  <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                    <%= sheet.purpose %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-4">
+              まだ同期したシートはありません
+            </p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+  <% else %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-red-800 mb-2">環境変数の設定が必要です</h3>
+      <p class="text-red-700 mb-4">
+        システムを使用するには、以下の環境変数を設定してください：
+      </p>
+      <div class="bg-white rounded p-4 font-mono text-sm">
+        <p class="mb-2">Google Service Account JSON:</p>
+        <code class="text-xs">GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'</code>
+      </div>
+      <p class="text-red-700 mt-4">
+        詳細な設定方法は README.md を参照してください。
+      </p>
+    </div>
+  <% end %>
+</div>

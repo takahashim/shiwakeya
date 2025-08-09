@@ -1,0 +1,88 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">スプレッドシート新規登録</h1>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with model: @service_spreadsheet, local: true do |f| %>
+      <% if @service_spreadsheet.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <h3 class="text-red-800 font-semibold mb-2">エラーが発生しました</h3>
+          <ul class="list-disc list-inside text-red-700">
+            <% @service_spreadsheet.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="space-y-6">
+        <div>
+          <%= f.label :spreadsheet_id, "スプレッドシートID", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_field :spreadsheet_id, 
+                required: true,
+                placeholder: "例: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">
+            スプレッドシートのURLから取得できます：<br>
+            https://docs.google.com/spreadsheets/d/<strong>{スプレッドシートID}</strong>/edit
+          </p>
+        </div>
+
+        <div>
+          <%= f.label :name, "表示名（オプション）", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_field :name, 
+                placeholder: "例: 売上管理シート",
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">
+            空欄の場合、スプレッドシートのタイトルが自動的に取得されます
+          </p>
+        </div>
+
+        <div>
+          <%= f.label :description, "説明", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_area :description, 
+                rows: 3,
+                placeholder: "このスプレッドシートの用途や管理内容を記入",
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center">
+            <%= f.check_box :is_active, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+            <%= f.label :is_active, "有効にする", class: "ml-2 block text-sm text-gray-900" %>
+          </div>
+          <p class="mt-1 text-sm text-gray-500">
+            無効にすると、一覧に表示されなくなります
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-yellow-800 mb-2">登録前の確認事項</h3>
+        <ul class="text-sm text-yellow-700 space-y-1">
+          <li>• スプレッドシートがサービスアカウントに共有されていることを確認してください</li>
+          <li>• サービスアカウントのメールアドレス: 
+            <code class="text-xs bg-yellow-100 px-1 py-0.5 rounded">
+              <%= JSON.parse(ENV['GOOGLE_SERVICE_ACCOUNT_JSON'])['client_email'] rescue 'サービスアカウント未設定' %>
+            </code>
+          </li>
+          <li>• 編集権限が付与されていることを確認してください</li>
+        </ul>
+      </div>
+
+      <div class="mt-8 flex justify-end space-x-4">
+        <%= link_to "キャンセル", service_spreadsheets_path, 
+            class: "px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" %>
+        <%= f.submit "登録", 
+            class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+      </div>
+    <% end %>
+  </div>
+</div>

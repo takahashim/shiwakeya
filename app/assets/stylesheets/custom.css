@@ -1,0 +1,9 @@
+/* button_to をインライン表示にする */
+form.button_to {
+  display: inline-block;
+}
+
+/* フレックスボックス内でのbutton_to */
+.flex form.button_to {
+  display: inline-flex;
+}
