@@ -1,9 +1,8 @@
 class ServiceSpreadsheetsController < ApplicationController
   before_action :require_login
   before_action :require_admin, only: [ :new, :create, :edit, :update, :destroy ]
-  before_action :set_service_spreadsheet, only: [ :show, :edit, :update, :destroy, :sync ]
+  before_action :set_service_spreadsheet, only: [ :show, :edit, :update, :destroy ]
   before_action :check_spreadsheet_access_permission, only: [ :show ]
-  before_action :check_spreadsheet_edit_access, only: [ :sync ]
 
   def index
     @service_spreadsheets = current_user.accessible_spreadsheets
@@ -68,13 +67,6 @@ class ServiceSpreadsheetsController < ApplicationController
     redirect_to service_spreadsheets_path, notice: "スプレッドシートを削除しました"
   end
 
-  def sync
-    @service_spreadsheet.sync_sheets
-    redirect_to @service_spreadsheet, notice: "シート情報を同期しました"
-  rescue => e
-    redirect_to @service_spreadsheet, alert: "同期中にエラーが発生しました: #{e.message}"
-  end
-
   private
 
   def set_service_spreadsheet
@@ -87,9 +79,5 @@ class ServiceSpreadsheetsController < ApplicationController
 
   def check_spreadsheet_access_permission
     check_spreadsheet_access(@service_spreadsheet)
-  end
-
-  def check_spreadsheet_edit_access
-    check_spreadsheet_edit_permission(@service_spreadsheet)
   end
 end

@@ -19,18 +19,15 @@ Rails.application.routes.draw do
 
   # Service Spreadsheets
   resources :service_spreadsheets do
-    member do
-      post :sync
-    end
+    # Sync action for spreadsheet
+    resource :sync, only: [ :create ], controller: "service_spreadsheets/syncs"
 
     # Service Sheets (nested under service_spreadsheets)
-    resources :service_sheets, only: [ :show ] do
-      member do
-        post :sync
-        patch :update
-        post :append
-        delete :clear
-      end
+    resources :service_sheets, only: [ :show, :update ] do
+      # Nested controllers for specific sheet actions
+      resource :sync, only: [ :create ], controller: "service_sheets/syncs"
+      resource :append, only: [ :create ], controller: "service_sheets/appends"
+      resource :clear, only: [ :destroy ], controller: "service_sheets/clears"
     end
   end
 
