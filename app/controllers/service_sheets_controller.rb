@@ -25,12 +25,6 @@ class ServiceSheetsController < ApplicationController
       redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
                   alert: "データが送信されていません"
     end
-  rescue JSON::ParserError
-    redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
-                alert: "データの形式が正しくありません"
-  rescue => e
-    redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
-                alert: "エラーが発生しました: #{e.message}"
   end
 
   private

@@ -7,8 +7,6 @@ class ServiceSpreadsheets::SyncsController < ApplicationController
   def create
     @service_spreadsheet.sync_sheets
     redirect_to @service_spreadsheet, notice: "シート情報を同期しました"
-  rescue => e
-    redirect_to @service_spreadsheet, alert: "同期中にエラーが発生しました: #{e.message}"
   end
 
   private

@@ -19,34 +19,27 @@ class ServiceSpreadsheetsController < ApplicationController
   def create
     @service_spreadsheet = ServiceSpreadsheet.new(service_spreadsheet_params)
 
-    begin
-      # スプレッドシートの存在確認
-      service = ServiceAccountSheetsService.new
-      spreadsheet = service.get_spreadsheet(@service_spreadsheet.spreadsheet_id)
+    # スプレッドシートの存在確認
+    service = ServiceAccountSheetsService.new
+    spreadsheet = service.get_spreadsheet(@service_spreadsheet.spreadsheet_id)
 
-      if spreadsheet
-        @service_spreadsheet.name ||= spreadsheet.properties.title
+    if spreadsheet
+      @service_spreadsheet.name ||= spreadsheet.properties.title
 
-        if @service_spreadsheet.save
-          @service_spreadsheet.sync_sheets
-          redirect_to @service_spreadsheet, notice: "スプレッドシートを登録しました"
-        else
-          render :new
-        end
+      if @service_spreadsheet.save
+        @service_spreadsheet.sync_sheets
+        redirect_to @service_spreadsheet, notice: "スプレッドシートを登録しました"
       else
-        # より詳細なエラーメッセージ
-        flash.now[:alert] = "指定されたスプレッドシートIDが見つかりません。\n" \
-                           "以下を確認してください：\n" \
-                           "1. スプレッドシートIDが正しいか\n" \
-                           "2. サービスアカウントにスプレッドシートが共有されているか\n" \
-                           "3. Google Sheets APIが有効になっているか"
-        Rails.logger.error "Failed to find spreadsheet with ID: #{@service_spreadsheet.spreadsheet_id}"
         render :new
       end
-    rescue => e
-      Rails.logger.error "Error in create action: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      flash.now[:alert] = "エラーが発生しました: #{e.message}"
+    else
+      # より詳細なエラーメッセージ
+      flash.now[:alert] = "指定されたスプレッドシートIDが見つかりません。\n" \
+                         "以下を確認してください：\n" \
+                         "1. スプレッドシートIDが正しいか\n" \
+                         "2. サービスアカウントにスプレッドシートが共有されているか\n" \
+                         "3. Google Sheets APIが有効になっているか"
+      Rails.logger.error "Failed to find spreadsheet with ID: #{@service_spreadsheet.spreadsheet_id}"
       render :new
     end
   end

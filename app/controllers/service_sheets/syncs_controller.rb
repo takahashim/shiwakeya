@@ -9,11 +9,6 @@ class ServiceSheets::SyncsController < ApplicationController
     @service_sheet.sync_data
     redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
                 notice: "データを同期しました"
-  rescue => e
-    Rails.logger.error "Sync error for sheet #{@service_sheet.sheet_name}: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-    redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
-                alert: "同期中にエラーが発生しました: #{e.message}\n\nシート名: #{@service_sheet.sheet_name}"
   end
 
   private

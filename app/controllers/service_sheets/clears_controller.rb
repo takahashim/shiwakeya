@@ -14,9 +14,6 @@ class ServiceSheets::ClearsController < ApplicationController
       redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
                   alert: "データのクリアに失敗しました"
     end
-  rescue => e
-    redirect_to service_spreadsheet_service_sheet_path(@service_spreadsheet, @service_sheet),
-                alert: "エラーが発生しました: #{e.message}"
   end
 
   private

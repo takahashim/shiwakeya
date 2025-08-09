@@ -28,9 +28,6 @@ class SessionsController < ApplicationController
         redirect_to root_path, notice: "アカウントを作成してログインしました"
       end
     end
-  rescue ActiveRecord::RecordInvalid
-    flash.now[:alert] = "ログインに失敗しました"
-    render :new
   end
 
   def destroy
