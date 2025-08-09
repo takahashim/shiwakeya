@@ -1,9 +1,9 @@
 class ServiceSpreadsheetsController < ApplicationController
   before_action :require_login
-  before_action :require_admin, only: [:new, :create, :edit, :update, :destroy]
-  before_action :set_service_spreadsheet, only: [:show, :edit, :update, :destroy, :sync]
-  before_action :check_spreadsheet_access_permission, only: [:show]
-  before_action :check_spreadsheet_edit_access, only: [:sync]
+  before_action :require_admin, only: [ :new, :create, :edit, :update, :destroy ]
+  before_action :set_service_spreadsheet, only: [ :show, :edit, :update, :destroy, :sync ]
+  before_action :check_spreadsheet_access_permission, only: [ :show ]
+  before_action :check_spreadsheet_edit_access, only: [ :sync ]
 
   def index
     @service_spreadsheets = current_user.accessible_spreadsheets
@@ -27,10 +27,10 @@ class ServiceSpreadsheetsController < ApplicationController
 
       if spreadsheet
         @service_spreadsheet.name ||= spreadsheet.properties.title
-        
+
         if @service_spreadsheet.save
           @service_spreadsheet.sync_sheets
-          redirect_to @service_spreadsheet, notice: 'スプレッドシートを登録しました'
+          redirect_to @service_spreadsheet, notice: "スプレッドシートを登録しました"
         else
           render :new
         end
@@ -57,7 +57,7 @@ class ServiceSpreadsheetsController < ApplicationController
 
   def update
     if @service_spreadsheet.update(service_spreadsheet_params)
-      redirect_to @service_spreadsheet, notice: 'スプレッドシートを更新しました'
+      redirect_to @service_spreadsheet, notice: "スプレッドシートを更新しました"
     else
       render :edit
     end
@@ -65,12 +65,12 @@ class ServiceSpreadsheetsController < ApplicationController
 
   def destroy
     @service_spreadsheet.destroy
-    redirect_to service_spreadsheets_path, notice: 'スプレッドシートを削除しました'
+    redirect_to service_spreadsheets_path, notice: "スプレッドシートを削除しました"
   end
 
   def sync
     @service_spreadsheet.sync_sheets
-    redirect_to @service_spreadsheet, notice: 'シート情報を同期しました'
+    redirect_to @service_spreadsheet, notice: "シート情報を同期しました"
   rescue => e
     redirect_to @service_spreadsheet, alert: "同期中にエラーが発生しました: #{e.message}"
   end

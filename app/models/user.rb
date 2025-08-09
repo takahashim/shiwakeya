@@ -6,15 +6,15 @@ class User < ApplicationRecord
   validates :role, inclusion: { in: %w[admin accountant member] }
 
   def admin?
-    role == 'admin'
+    role == "admin"
   end
 
   def accountant?
-    role == 'accountant'
+    role == "accountant"
   end
 
   def member?
-    role == 'member'
+    role == "member"
   end
 
   # スプレッドシートへのアクセス権限を確認

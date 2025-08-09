@@ -1,6 +1,6 @@
-require 'google/apis/sheets_v4'
-require 'google/apis/drive_v3'
-require 'googleauth'
+require "google/apis/sheets_v4"
+require "google/apis/drive_v3"
+require "googleauth"
 
 class GoogleSheetsService
   attr_reader :user, :sheets_service, :drive_service
@@ -15,7 +15,7 @@ class GoogleSheetsService
   def list_spreadsheets
     @drive_service.list_files(
       q: "mimeType='application/vnd.google-apps.spreadsheet'",
-      fields: 'files(id, name, created_time, modified_time)',
+      fields: "files(id, name, created_time, modified_time)",
       page_size: 100
     ).files
   rescue Google::Apis::Error => e
@@ -41,7 +41,7 @@ class GoogleSheetsService
   def get_sheet_names(spreadsheet_id)
     spreadsheet = get_spreadsheet(spreadsheet_id)
     return [] unless spreadsheet
-    
+
     spreadsheet.sheets.map { |sheet| sheet.properties.title }
   rescue Google::Apis::Error => e
     Rails.logger.error "Error getting sheet names: #{e.message}"

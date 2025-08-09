@@ -8,12 +8,12 @@ class ServiceSheet < ApplicationRecord
 
   def sync_data
     values = service_spreadsheet.fetch_sheet_data(sheet_name)
-    
+
     update!(
       data: values.to_json,
       last_synced_at: Time.current
     )
-    
+
     values
   rescue => e
     Rails.logger.error "Error syncing sheet data for #{sheet_name}: #{e.message}"
@@ -30,29 +30,29 @@ class ServiceSheet < ApplicationRecord
 
   def write_data(values)
     result = service_spreadsheet.update_sheet_data(sheet_name, values)
-    
+
     if result
       update!(
         data: values.to_json,
         last_synced_at: Time.current
       )
     end
-    
+
     result
   end
 
   def append_row(row_data)
     service = ServiceAccountSheetsService.new
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
-    escaped_sheet_name = sheet_name.include?(' ') || sheet_name.include?('!') ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
+    escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A:Z"
-    service.append_values(range, [row_data], service_spreadsheet.spreadsheet_id)
+    service.append_values(range, [ row_data ], service_spreadsheet.spreadsheet_id)
   end
 
   def clear_all_data
     service = ServiceAccountSheetsService.new
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
-    escaped_sheet_name = sheet_name.include?(' ') || sheet_name.include?('!') ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
+    escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A:Z"
     service.clear_values(range, service_spreadsheet.spreadsheet_id)
   end

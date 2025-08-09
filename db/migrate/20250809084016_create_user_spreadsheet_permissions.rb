@@ -8,7 +8,7 @@ class CreateUserSpreadsheetPermissions < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :user_spreadsheet_permissions, [:user_id, :service_spreadsheet_id], 
+    add_index :user_spreadsheet_permissions, [ :user_id, :service_spreadsheet_id ],
               unique: true, name: 'index_user_spreadsheet_permissions_unique'
   end
 end

@@ -1,7 +1,7 @@
 class UserPermissionsController < ApplicationController
   before_action :require_login
   before_action :require_admin
-  before_action :set_user, only: [:edit, :update]
+  before_action :set_user, only: [ :edit, :update ]
 
   def index
     @users = User.all.order(:email)
@@ -15,7 +15,7 @@ class UserPermissionsController < ApplicationController
   def update
     if @user.update(user_params)
       update_spreadsheet_permissions
-      redirect_to user_permissions_path, notice: 'ユーザー権限を更新しました'
+      redirect_to user_permissions_path, notice: "ユーザー権限を更新しました"
     else
       @spreadsheets = ServiceSpreadsheet.all
       @user_permissions = @user.user_spreadsheet_permissions.includes(:service_spreadsheet)
@@ -37,14 +37,14 @@ class UserPermissionsController < ApplicationController
     return unless @user.member?
 
     existing_permissions = @user.user_spreadsheet_permissions.index_by(&:service_spreadsheet_id)
-    
+
     params[:permissions]&.each do |spreadsheet_id, permission_params|
-      next if permission_params[:grant] != '1'
-      
-      permission = existing_permissions[spreadsheet_id.to_i] || 
+      next if permission_params[:grant] != "1"
+
+      permission = existing_permissions[spreadsheet_id.to_i] ||
                   @user.user_spreadsheet_permissions.build(service_spreadsheet_id: spreadsheet_id)
-      
-      permission.can_edit = permission_params[:can_edit] == '1'
+
+      permission.can_edit = permission_params[:can_edit] == "1"
       permission.save
     end
 

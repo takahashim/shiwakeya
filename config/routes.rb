@@ -22,9 +22,9 @@ Rails.application.routes.draw do
     member do
       post :sync
     end
-    
+
     # Service Sheets (nested under service_spreadsheets)
-    resources :service_sheets, only: [:show] do
+    resources :service_sheets, only: [ :show ] do
       member do
         post :sync
         patch :update
@@ -35,5 +35,5 @@ Rails.application.routes.draw do
   end
 
   # User Permissions (Admin only)
-  resources :user_permissions, only: [:index, :edit, :update]
+  resources :user_permissions, only: [ :index, :edit, :update ]
 end
