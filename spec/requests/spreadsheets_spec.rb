@@ -103,8 +103,8 @@ RSpec.describe "Spreadsheets", type: :request do
     end
 
     let(:mock_client) { instance_double(GoogleSheetsClient) }
-    let(:mock_google_spreadsheet) { 
-      double('Spreadsheet', 
+    let(:mock_google_spreadsheet) {
+      double('Spreadsheet',
         properties: double(title: 'Google Title'),
         sheets: [
           double('Sheet', properties: double(title: 'Sheet1', sheet_id: 1)),

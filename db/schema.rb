@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_084016) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_170619) do
   create_table "sheets", force: :cascade do |t|
     t.integer "spreadsheet_id", null: false
     t.string "sheet_name"
@@ -20,6 +20,25 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_084016) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["spreadsheet_id"], name: "index_sheets_on_spreadsheet_id"
+  end
+
+  create_table "spreadsheet_syncs", force: :cascade do |t|
+    t.string "uuid", null: false
+    t.string "sheet_id", null: false
+    t.string "sheet_name"
+    t.integer "row_number"
+    t.text "sheet_data"
+    t.text "local_data"
+    t.integer "sync_status", default: 0, null: false
+    t.datetime "last_synced_at"
+    t.datetime "sheet_modified_at"
+    t.integer "version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sheet_id", "row_number"], name: "index_spreadsheet_syncs_on_sheet_id_and_row_number", unique: true
+    t.index ["sheet_id"], name: "index_spreadsheet_syncs_on_sheet_id"
+    t.index ["sync_status"], name: "index_spreadsheet_syncs_on_sync_status"
+    t.index ["uuid"], name: "index_spreadsheet_syncs_on_uuid", unique: true
   end
 
   create_table "spreadsheets", force: :cascade do |t|
