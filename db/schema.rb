@@ -24,19 +24,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_170619) do
 
   create_table "spreadsheet_syncs", force: :cascade do |t|
     t.string "uuid", null: false
-    t.string "sheet_id", null: false
+    t.integer "spreadsheet_id", null: false
     t.string "sheet_name"
     t.integer "row_number"
-    t.text "sheet_data"
-    t.text "local_data"
+    t.text "row_data"
     t.integer "sync_status", default: 0, null: false
     t.datetime "last_synced_at"
-    t.datetime "sheet_modified_at"
-    t.integer "version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["sheet_id", "row_number"], name: "index_spreadsheet_syncs_on_sheet_id_and_row_number", unique: true
-    t.index ["sheet_id"], name: "index_spreadsheet_syncs_on_sheet_id"
+    t.index ["spreadsheet_id", "sheet_name", "row_number"], name: "idx_on_spreadsheet_id_sheet_name_row_number_189aa99b08", unique: true
     t.index ["sync_status"], name: "index_spreadsheet_syncs_on_sync_status"
     t.index ["uuid"], name: "index_spreadsheet_syncs_on_uuid", unique: true
   end
@@ -64,14 +60,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_170619) do
   create_table "users", force: :cascade do |t|
     t.string "email", null: false
     t.string "name"
+    t.integer "role", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "role", default: 0
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["role"], name: "index_users_on_role"
   end
 
   add_foreign_key "sheets", "spreadsheets"
+  add_foreign_key "spreadsheet_syncs", "spreadsheets"
   add_foreign_key "user_spreadsheet_permissions", "spreadsheets"
   add_foreign_key "user_spreadsheet_permissions", "users"
 end
