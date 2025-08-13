@@ -91,7 +91,7 @@ RSpec.describe "Sheets", type: :request do
   end
 
   describe "POST /spreadsheets/:spreadsheet_id/sheets/:sheet_id/append" do
-    let(:mock_client) { instance_double(GoogleSheetsClient) }
+    let(:mock_client) { instance_double(SpreadsheetClient) }
     let(:row_params) do
       {
         row_data: {
@@ -102,7 +102,7 @@ RSpec.describe "Sheets", type: :request do
     end
 
     before do
-      allow(GoogleSheetsClient).to receive(:new).and_return(mock_client)
+      allow(SpreadsheetClient).to receive(:new).with(spreadsheet.spreadsheet_id).and_return(mock_client)
     end
 
     context "when logged in with access" do

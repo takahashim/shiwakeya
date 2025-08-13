@@ -102,7 +102,7 @@ RSpec.describe "Spreadsheets", type: :request do
       }
     end
 
-    let(:mock_client) { instance_double(GoogleSheetsClient) }
+    let(:mock_client) { instance_double(SpreadsheetClient) }
     let(:mock_google_spreadsheet) {
       double('Spreadsheet',
         properties: double(title: 'Google Title'),
@@ -114,8 +114,8 @@ RSpec.describe "Spreadsheets", type: :request do
     }
 
     before do
-      allow(GoogleSheetsClient).to receive(:new).and_return(mock_client)
-      allow(mock_client).to receive(:get_spreadsheet).and_return(mock_google_spreadsheet)
+      allow(SpreadsheetClient).to receive(:new).with("test_id_123").and_return(mock_client)
+      allow(mock_client).to receive(:spreadsheet).and_return(mock_google_spreadsheet)
     end
 
     context "when logged in as admin" do
@@ -141,7 +141,7 @@ RSpec.describe "Spreadsheets", type: :request do
 
       context "when spreadsheet_id not found" do
         before do
-          allow(mock_client).to receive(:get_spreadsheet).and_raise(Google::Apis::ClientError.new('Not found'))
+          allow(mock_client).to receive(:spreadsheet).and_raise(Google::Apis::ClientError.new('Not found'))
         end
 
         it "does not create spreadsheet and shows error" do

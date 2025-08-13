@@ -130,11 +130,11 @@ RSpec.describe Sheet, type: :model do
   describe '#append_row' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:sheet) { create(:sheet, spreadsheet: spreadsheet, sheet_name: 'Test Sheet') }
-    let(:mock_client) { instance_double(GoogleSheetsClient) }
+    let(:mock_client) { instance_double(SpreadsheetClient) }
     let(:row_data) { [ "New Value 1", "New Value 2" ] }
 
     before do
-      allow(GoogleSheetsClient).to receive(:new).and_return(mock_client)
+      allow(SpreadsheetClient).to receive(:new).with(spreadsheet.spreadsheet_id).and_return(mock_client)
     end
 
     context 'when append is successful' do
@@ -145,8 +145,7 @@ RSpec.describe Sheet, type: :model do
       it 'appends row to Google Sheets' do
         expect(mock_client).to receive(:append_values).with(
           "'Test Sheet'!A:Z",
-          [ row_data ],
-          spreadsheet.spreadsheet_id
+          [ row_data ]
         )
 
         result = sheet.append_row(row_data)
@@ -164,8 +163,7 @@ RSpec.describe Sheet, type: :model do
       it 'does not escape sheet name' do
         expect(mock_client).to receive(:append_values).with(
           "SimpleSheet!A:Z",
-          [ row_data ],
-          spreadsheet.spreadsheet_id
+          [ row_data ]
         )
 
         sheet.append_row(row_data)

@@ -42,11 +42,11 @@ class Sheet < ApplicationRecord
   end
 
   def append_row(row_data)
-    service = GoogleSheetsClient.new
+    client = SpreadsheetClient.new(spreadsheet.spreadsheet_id)
     # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
     escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
     range = "#{escaped_sheet_name}!A:Z"
-    service.append_values(range, [ row_data ], spreadsheet.spreadsheet_id)
+    client.append_values(range, [ row_data ])
   end
 
   # ローカルのデータベースに保存されているデータをクリア（スプレッドシートのデータは削除しない）

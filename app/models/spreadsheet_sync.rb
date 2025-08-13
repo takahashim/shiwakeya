@@ -1,52 +1,39 @@
 class SpreadsheetSync < ApplicationRecord
-  before_create :set_uuid, if: -> { uuid.blank? }
+  belongs_to :spreadsheet
 
+  # UUIDはスプレッドシートから取得した値を保存（Rails側では生成しない）
+  validates :uuid, presence: true, uniqueness: true
+  validates :spreadsheet_id, presence: true
+  validates :sheet_name, presence: true
+  validates :row_number, presence: true
+
+  # ステータスはシンプルに
   enum :sync_status, {
-    pending: 0,
-    synced: 1,
-    conflict: 2,
-    error: 3
+    active: 0,      # 正常に同期中
+    deleted: 1,     # スプレッドシートから削除された
+    error: 2        # エラー状態
   }
 
-  validates :uuid, presence: true, uniqueness: true
-  validates :sheet_id, presence: true
-  validates :sheet_id, uniqueness: { scope: :row_number }, if: :row_number?
 
-  serialize :sheet_data, coder: JSON
-  serialize :local_data, coder: JSON
+  serialize :row_data, coder: JSON
 
-  scope :needs_sync, -> { where(sync_status: [ :pending, :conflict ]) }
-  scope :by_sheet, ->(sheet_id) { where(sheet_id: sheet_id) }
+  scope :active, -> { where(sync_status: :active) }
+  scope :by_sheet, ->(spreadsheet_id, sheet_name) {
+    where(spreadsheet_id: spreadsheet_id, sheet_name: sheet_name)
+  }
 
-  def self.generate_uuidv7
-    Uuidv7Generator.generate
-  end
-
-  def mark_synced!
+  # 同期時のデータ更新
+  def update_from_sheet(row_data, row_number)
     update!(
-      sync_status: :synced,
+      row_data: row_data,
+      row_number: row_number,
       last_synced_at: Time.current,
-      version: version + 1
+      sync_status: :active
     )
   end
 
-  def detect_conflict(sheet_timestamp)
-    return false if sheet_modified_at.nil?
-    sheet_timestamp > sheet_modified_at && local_data_changed?
-  end
-
-  def local_data_changed?
-    saved_change_to_local_data? || local_data_changed?
-  end
-
-  def merge_sheet_data(new_sheet_data)
-    self.sheet_data = new_sheet_data
-    self.sheet_modified_at = Time.current
-  end
-
-  private
-
-  def set_uuid
-    self.uuid = Uuidv7Generator.generate
+  # データの比較
+  def data_changed?(new_data)
+    row_data != new_data
   end
 end

@@ -9,8 +9,8 @@ class Spreadsheet < ApplicationRecord
   scope :active, -> { where(is_active: true) }
 
   def sync_sheets
-    service = GoogleSheetsClient.new
-    spreadsheet = service.get_spreadsheet(spreadsheet_id)
+    client = SpreadsheetClient.new(spreadsheet_id)
+    spreadsheet = client.spreadsheet
 
     return unless spreadsheet
 
@@ -41,11 +41,8 @@ class Spreadsheet < ApplicationRecord
   end
 
   def fetch_sheet_data(sheet_name)
-    service = GoogleSheetsClient.new
-    # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
-    escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
-    range = "#{escaped_sheet_name}!A:Z"
-    service.get_values(range, spreadsheet_id)
+    client = SpreadsheetClient.new(spreadsheet_id)
+    client.fetch_sheet_data(sheet_name)
   rescue => e
     Rails.logger.error "Error fetching sheet data for #{sheet_name} from spreadsheet #{spreadsheet_id}: #{e.message}"
     Rails.logger.error "Range used: #{range}" if defined?(range)
@@ -54,10 +51,7 @@ class Spreadsheet < ApplicationRecord
   end
 
   def update_sheet_data(sheet_name, values)
-    service = GoogleSheetsClient.new
-    # シート名に特殊文字が含まれる場合はシングルクォートでエスケープ
-    escaped_sheet_name = sheet_name.include?(" ") || sheet_name.include?("!") ? "'#{sheet_name.gsub("'", "''")}'" : sheet_name
-    range = "#{escaped_sheet_name}!A1"
-    service.update_values(range, values, spreadsheet_id)
+    client = SpreadsheetClient.new(spreadsheet_id)
+    client.update_sheet_data(sheet_name, values)
   end
 end

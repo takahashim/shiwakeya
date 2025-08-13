@@ -20,13 +20,13 @@ class SpreadsheetsController < ApplicationController
     @spreadsheet = Spreadsheet.new(spreadsheet_params)
 
     # スプレッドシートの存在確認
-    service = GoogleSheetsClient.new
+    client = SpreadsheetClient.new(@spreadsheet.spreadsheet_id)
 
     begin
-      spreadsheet = service.get_spreadsheet(@spreadsheet.spreadsheet_id)
+      spreadsheet = client.spreadsheet
 
       # 名前が入力されていない場合は、スプレッドシートのタイトルを使用
-      if @spreadsheet.name.blank?
+      if @spreadsheet.name.blank? && spreadsheet
         @spreadsheet.name = spreadsheet.properties.title
       end
 

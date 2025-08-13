@@ -13,13 +13,13 @@ RSpec.describe Spreadsheet, type: :model do
 
   describe '#sync_sheets' do
     let(:spreadsheet) { create(:spreadsheet) }
-    let(:mock_client) { instance_double(GoogleSheetsClient) }
+    let(:mock_client) { instance_double(SpreadsheetClient) }
     let(:mock_google_spreadsheet) { double('Google::Apis::SheetsV4::Spreadsheet') }
     let(:mock_sheet) { double('Sheet', properties: double(title: 'Sheet1', sheet_id: 123)) }
 
     before do
-      allow(GoogleSheetsClient).to receive(:new).and_return(mock_client)
-      allow(mock_client).to receive(:get_spreadsheet).and_return(mock_google_spreadsheet)
+      allow(SpreadsheetClient).to receive(:new).with(spreadsheet.spreadsheet_id).and_return(mock_client)
+      allow(mock_client).to receive(:spreadsheet).and_return(mock_google_spreadsheet)
       allow(mock_google_spreadsheet).to receive(:sheets).and_return([ mock_sheet ])
     end
 
