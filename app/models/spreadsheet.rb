@@ -8,6 +8,13 @@ class Spreadsheet < ApplicationRecord
 
   scope :active, -> { where(is_active: true) }
 
+  # 同期対象のスプレッドシートを取得
+  # @param id [Integer, nil] 特定のスプレッドシートID（nilの場合は全アクティブ）
+  # @return [ActiveRecord::Relation]
+  def self.for_sync(id: nil)
+    id ? where(id: id) : active
+  end
+
   def sync_sheets
     client = SpreadsheetClient.new(spreadsheet_id)
     spreadsheet = client.spreadsheet
@@ -70,21 +77,5 @@ class Spreadsheet < ApplicationRecord
 
   def drive_service
     @drive_service ||= DriveService.new
-  end
-
-  public
-
-  def log_sync_result(sheet, result)
-    if result[:errors].present? && result[:errors].any?
-      Rails.logger.error(
-        "Sync errors for #{name}/#{sheet.sheet_name}: " \
-        "#{result[:errors].to_json}"
-      )
-    else
-      Rails.logger.info(
-        "Synced #{name}/#{sheet.sheet_name}: " \
-        "#{result[:synced]} updated, #{result[:skipped]} skipped"
-      )
-    end
   end
 end

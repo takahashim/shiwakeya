@@ -11,6 +11,32 @@ RSpec.describe Spreadsheet, type: :model do
     end
   end
 
+  describe '.for_sync' do
+    let!(:active_spreadsheet) { create(:spreadsheet, is_active: true) }
+    let!(:inactive_spreadsheet) { create(:spreadsheet, is_active: false) }
+
+    context 'when id is not provided' do
+      it 'returns only active spreadsheets' do
+        result = Spreadsheet.for_sync
+        expect(result).to include(active_spreadsheet)
+        expect(result).not_to include(inactive_spreadsheet)
+      end
+    end
+
+    context 'when id is provided' do
+      it 'returns the specific spreadsheet regardless of active status' do
+        result = Spreadsheet.for_sync(id: inactive_spreadsheet.id)
+        expect(result).to include(inactive_spreadsheet)
+        expect(result).not_to include(active_spreadsheet)
+      end
+
+      it 'returns empty relation when id does not exist' do
+        result = Spreadsheet.for_sync(id: 999999)
+        expect(result).to be_empty
+      end
+    end
+  end
+
   describe '#recently_edited?' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:drive_service) { instance_double(DriveService) }
@@ -90,38 +116,6 @@ RSpec.describe Spreadsheet, type: :model do
       result = spreadsheet.last_modified_time
       expect(result).to be_a(Time)
       expect(result.to_i).to eq(modified_time.to_i)
-    end
-  end
-
-  describe '#log_sync_result' do
-    let(:spreadsheet) { create(:spreadsheet) }
-    let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
-
-    context 'when there are errors' do
-      let(:result) { { errors: [ 'Error 1', 'Error 2' ], synced: 0, skipped: 0 } }
-
-      it 'logs errors' do
-        expect(Rails.logger).to receive(:error).with(/Sync errors/)
-        spreadsheet.log_sync_result(sheet, result)
-      end
-    end
-
-    context 'when there are no errors' do
-      let(:result) { { errors: [], synced: 5, skipped: 2 } }
-
-      it 'logs success info' do
-        expect(Rails.logger).to receive(:info).with(/Synced/)
-        spreadsheet.log_sync_result(sheet, result)
-      end
-    end
-
-    context 'when errors is nil' do
-      let(:result) { { synced: 5, skipped: 2 } }
-
-      it 'logs success info' do
-        expect(Rails.logger).to receive(:info).with(/Synced/)
-        spreadsheet.log_sync_result(sheet, result)
-      end
     end
   end
 

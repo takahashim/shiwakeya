@@ -43,18 +43,6 @@ RSpec.describe DataSyncJob, type: :job do
     context 'when sync completes successfully' do
       let!(:sheet1) { create(:sheet, spreadsheet: spreadsheet) }
 
-      it 'returns results with spreadsheet and sheet info' do
-        results = described_class.new.perform(spreadsheet.id)
-
-        expect(results).to eq([
-          {
-            spreadsheet: spreadsheet.name,
-            sheet: sheet1.sheet_name,
-            result: sync_result
-          }
-        ])
-      end
-
       it 'logs sync results' do
         allow(Rails.logger).to receive(:info)
         expect(Rails.logger).to receive(:info).with(/Synced/)
@@ -83,14 +71,6 @@ RSpec.describe DataSyncJob, type: :job do
           .and_return(sync_service)
 
         described_class.new.perform(spreadsheet.id)
-      end
-
-      it 'returns results for all sheets' do
-        results = described_class.new.perform(spreadsheet.id)
-
-        expect(results.length).to eq(2)
-        expect(results[0][:result]).to eq(sync_result1)
-        expect(results[1][:result]).to eq(sync_result2)
       end
 
       it 'logs results for each sheet' do

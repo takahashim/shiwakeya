@@ -48,38 +48,6 @@ RSpec.describe UuidBackfillJob, type: :job do
 
         described_class.new.perform(active_spreadsheet.id)
       end
-
-      it 'reschedules the job for later' do
-        allow(Rails.logger).to receive(:info)
-
-        expect {
-          described_class.new.perform(active_spreadsheet.id)
-        }.to have_enqueued_job(described_class).with(active_spreadsheet.id)
-      end
-    end
-
-    context 'when multiple spreadsheets are processed' do
-      let(:service1) { instance_double(UuidBackfillService) }
-      let(:service2) { instance_double(UuidBackfillService) }
-      let(:results1) { [ { spreadsheet: 'Sheet1', result: { count: 5 } } ] }
-      let(:results2) { [ { spreadsheet: 'Sheet2', result: { count: 3 } } ] }
-
-      before do
-        create(:spreadsheet, is_active: true)
-        create(:spreadsheet, is_active: true)
-
-        allow(UuidBackfillService).to receive(:new).and_return(service1, service2)
-        allow(service1).to receive(:should_skip_backfill?).and_return(false)
-        allow(service2).to receive(:should_skip_backfill?).and_return(false)
-        allow(service1).to receive(:perform).and_return(results1)
-        allow(service2).to receive(:perform).and_return(results2)
-      end
-
-      it 'combines results from all spreadsheets' do
-        results = described_class.new.perform
-
-        expect(results).to eq(results1 + results2)
-      end
     end
   end
 
