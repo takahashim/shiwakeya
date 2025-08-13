@@ -2,118 +2,41 @@ require "google/apis/sheets_v4"
 require "googleauth"
 require "json"
 
+# Google Sheets APIの低レベルクライアント
 class GoogleSheetsClient
-  attr_reader :service
+  attr_reader :authorization, :service
 
   def initialize
-    @service = Google::Apis::SheetsV4::SheetsService.new
-    @service.authorization = authorize
+    @authorization = authorize
+    @service = create_service
+  end
+
+  # シングルトンのクライアントインスタンスを返す
+  def self.client
+    @client ||= new
   rescue StandardError => e
     Rails.logger.error "Failed to initialize GoogleSheetsClient: #{e.message}"
     Rails.logger.error "Error details: #{e.inspect}"
     raise
   end
 
-  # スプレッドシートのメタデータを取得
-  def get_spreadsheet(spreadsheet_id)
-    @service.get_spreadsheet(spreadsheet_id)
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error getting spreadsheet #{spreadsheet_id}: #{e.message}"
-    Rails.logger.error "Error details: #{e.inspect}"
-    nil
-  rescue StandardError => e
-    Rails.logger.error "Unexpected error getting spreadsheet #{spreadsheet_id}: #{e.message}"
-    Rails.logger.error "Error details: #{e.inspect}"
-    nil
+  # 便利メソッド：直接サービスを取得
+  def self.service
+    client.service
   end
 
-  # シートの値を取得
-  def get_values(range, spreadsheet_id)
-    result = @service.get_spreadsheet_values(spreadsheet_id, range)
-    result.values || []
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error getting values: #{e.message}"
-    []
-  end
-
-  # シートに値を書き込み
-  def update_values(range, values, spreadsheet_id)
-    value_range = Google::Apis::SheetsV4::ValueRange.new
-    value_range.values = values
-    value_range.range = range
-
-    @service.update_spreadsheet_value(
-      spreadsheet_id,
-      range,
-      value_range,
-      value_input_option: "USER_ENTERED"
-    )
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error updating values: #{e.message}"
-    nil
-  end
-
-  # 複数のシートに値を書き込み（バッチ更新）
-  def batch_update_values(data, spreadsheet_id)
-    batch_update_request = Google::Apis::SheetsV4::BatchUpdateValuesRequest.new
-    batch_update_request.value_input_option = "USER_ENTERED"
-    batch_update_request.data = data.map do |item|
-      value_range = Google::Apis::SheetsV4::ValueRange.new
-      value_range.range = item[:range]
-      value_range.values = item[:values]
-      value_range
-    end
-
-    @service.batch_update_spreadsheet_value(spreadsheet_id, batch_update_request)
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error batch updating values: #{e.message}"
-    nil
-  end
-
-  # 新しいシートを追加
-  def add_sheet(sheet_name, spreadsheet_id)
-    batch_update_request = Google::Apis::SheetsV4::BatchUpdateSpreadsheetRequest.new
-    batch_update_request.requests = [
-      {
-        add_sheet: {
-          properties: {
-            title: sheet_name
-          }
-        }
-      }
-    ]
-
-    @service.batch_update_spreadsheet(spreadsheet_id, batch_update_request)
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error adding sheet: #{e.message}"
-    nil
-  end
-
-  # シートをクリア
-  def clear_values(range, spreadsheet_id)
-    @service.clear_values(spreadsheet_id, range)
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error clearing values: #{e.message}"
-    nil
-  end
-
-  # 値を追加（既存データの下に追加）
-  def append_values(range, values, spreadsheet_id)
-    value_range = Google::Apis::SheetsV4::ValueRange.new
-    value_range.values = values
-
-    @service.append_spreadsheet_value(
-      spreadsheet_id,
-      range,
-      value_range,
-      value_input_option: "USER_ENTERED"
-    )
-  rescue Google::Apis::Error => e
-    Rails.logger.error "Error appending values: #{e.message}"
-    nil
+  # テスト用：シングルトンをリセット
+  def self.reset_client
+    @client = nil
   end
 
   private
+
+  def create_service
+    service = Google::Apis::SheetsV4::SheetsService.new
+    service.authorization = @authorization
+    service
+  end
 
   def authorize
     # 環境変数からサービスアカウントのJSON認証情報を取得
