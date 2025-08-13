@@ -84,6 +84,57 @@ RSpec.describe SpreadsheetClient do
     end
   end
 
+  describe "#[]" do
+    let(:range) { "Sheet1!A:Z" }
+    let(:mock_response) { double("ValueRange", values: [ [ "A1", "B1" ], [ "A2", "B2" ] ]) }
+
+    context "when successful" do
+      before do
+        allow(mock_service).to receive(:get_spreadsheet_values).and_return(mock_response)
+      end
+
+      it "returns the values using array accessor syntax" do
+        result = client[range]
+        expect(result).to eq([ [ "A1", "B1" ], [ "A2", "B2" ] ])
+      end
+
+      it "behaves the same as values method" do
+        expect(client[range]).to eq(client.values(range))
+      end
+    end
+
+    context "when sheet is empty" do
+      let(:empty_response) { double("ValueRange", values: nil) }
+
+      before do
+        allow(mock_service).to receive(:get_spreadsheet_values).and_return(empty_response)
+      end
+
+      it "returns empty array" do
+        result = client[range]
+        expect(result).to eq([])
+      end
+    end
+
+    context "when error occurs" do
+      before do
+        allow(mock_service).to receive(:get_spreadsheet_values).and_raise(Google::Apis::ClientError.new("API Error"))
+      end
+
+      it "logs error and returns empty array" do
+        expect(Rails.logger).to receive(:error).with(/Error getting values/)
+        result = client[range]
+        expect(result).to eq([])
+      end
+
+      it "allows safe chaining with array methods" do
+        expect(Rails.logger).to receive(:error).with(/Error getting values/)
+        result = client[range].map { |row| row.first }
+        expect(result).to eq([])
+      end
+    end
+  end
+
   describe "#update_values" do
     let(:range) { "Sheet1!A1" }
     let(:values) { [ [ "New1", "New2" ], [ "Value1", "Value2" ] ] }

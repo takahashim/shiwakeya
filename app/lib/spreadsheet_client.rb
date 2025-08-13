@@ -24,6 +24,10 @@ class SpreadsheetClient
     []
   end
 
+  # 配列アクセサスタイルでの値取得（valuesメソッドのエイリアス）
+  # 使用例: client["Sheet1!A1:B10"]
+  alias [] values
+
   # シートに値を書き込み
   def update_values(range, values)
     value_range = Google::Apis::SheetsV4::ValueRange.new(
