@@ -54,4 +54,37 @@ class Spreadsheet < ApplicationRecord
     client = SpreadsheetClient.new(spreadsheet_id)
     client.update_sheet_data(sheet_name, values)
   end
+
+  def recently_edited?(threshold: 5.minutes)
+    last_modified_time > threshold.ago
+  rescue => e
+    Rails.logger.error("Failed to check sheet activity: #{e.message}")
+    true
+  end
+
+  def last_modified_time
+    drive_service.get_last_modified_time(spreadsheet_id)
+  end
+
+  private
+
+  def drive_service
+    @drive_service ||= DriveService.new
+  end
+
+  public
+
+  def log_sync_result(sheet, result)
+    if result[:errors].present? && result[:errors].any?
+      Rails.logger.error(
+        "Sync errors for #{name}/#{sheet.sheet_name}: " \
+        "#{result[:errors].to_json}"
+      )
+    else
+      Rails.logger.info(
+        "Synced #{name}/#{sheet.sheet_name}: " \
+        "#{result[:synced]} updated, #{result[:skipped]} skipped"
+      )
+    end
+  end
 end

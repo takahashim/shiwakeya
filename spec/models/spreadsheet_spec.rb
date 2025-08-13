@@ -11,6 +11,120 @@ RSpec.describe Spreadsheet, type: :model do
     end
   end
 
+  describe '#recently_edited?' do
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:drive_service) { instance_double(DriveService) }
+
+    before do
+      allow(DriveService).to receive(:new).and_return(drive_service)
+    end
+
+    context 'when file was modified recently' do
+      before do
+        allow(drive_service).to receive(:get_last_modified_time)
+          .with(spreadsheet.spreadsheet_id)
+          .and_return(2.minutes.ago)
+      end
+
+      it 'returns true' do
+        expect(spreadsheet.recently_edited?).to be true
+      end
+    end
+
+    context 'when file was not modified recently' do
+      before do
+        allow(drive_service).to receive(:get_last_modified_time)
+          .with(spreadsheet.spreadsheet_id)
+          .and_return(10.minutes.ago)
+      end
+
+      it 'returns false' do
+        expect(spreadsheet.recently_edited?).to be false
+      end
+    end
+
+    context 'when custom threshold is provided' do
+      before do
+        allow(drive_service).to receive(:get_last_modified_time)
+          .with(spreadsheet.spreadsheet_id)
+          .and_return(7.minutes.ago)
+      end
+
+      it 'uses the custom threshold' do
+        expect(spreadsheet.recently_edited?(threshold: 10.minutes)).to be true
+        expect(spreadsheet.recently_edited?(threshold: 5.minutes)).to be false
+      end
+    end
+
+    context 'when API call fails' do
+      before do
+        allow(drive_service).to receive(:get_last_modified_time)
+          .with(spreadsheet.spreadsheet_id)
+          .and_raise(StandardError, 'API Error')
+      end
+
+      it 'returns true for safety' do
+        expect(spreadsheet.recently_edited?).to be true
+      end
+
+      it 'logs the error' do
+        expect(Rails.logger).to receive(:error).with(/Failed to check sheet activity/)
+        spreadsheet.recently_edited?
+      end
+    end
+  end
+
+  describe '#last_modified_time' do
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:drive_service) { instance_double(DriveService) }
+    let(:modified_time) { 1.hour.ago }
+
+    before do
+      allow(DriveService).to receive(:new).and_return(drive_service)
+      allow(drive_service).to receive(:get_last_modified_time)
+        .with(spreadsheet.spreadsheet_id)
+        .and_return(modified_time)
+    end
+
+    it 'returns the last modified time as Time object' do
+      result = spreadsheet.last_modified_time
+      expect(result).to be_a(Time)
+      expect(result.to_i).to eq(modified_time.to_i)
+    end
+  end
+
+  describe '#log_sync_result' do
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
+
+    context 'when there are errors' do
+      let(:result) { { errors: [ 'Error 1', 'Error 2' ], synced: 0, skipped: 0 } }
+
+      it 'logs errors' do
+        expect(Rails.logger).to receive(:error).with(/Sync errors/)
+        spreadsheet.log_sync_result(sheet, result)
+      end
+    end
+
+    context 'when there are no errors' do
+      let(:result) { { errors: [], synced: 5, skipped: 2 } }
+
+      it 'logs success info' do
+        expect(Rails.logger).to receive(:info).with(/Synced/)
+        spreadsheet.log_sync_result(sheet, result)
+      end
+    end
+
+    context 'when errors is nil' do
+      let(:result) { { synced: 5, skipped: 2 } }
+
+      it 'logs success info' do
+        expect(Rails.logger).to receive(:info).with(/Synced/)
+        spreadsheet.log_sync_result(sheet, result)
+      end
+    end
+  end
+
   describe '#sync_sheets' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:mock_client) { instance_double(SpreadsheetClient) }
