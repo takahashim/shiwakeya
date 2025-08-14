@@ -2,7 +2,7 @@
 
 ## 概要
 
-仕訳屋さん（Shiwakeya）は、Googleスプレッドシートとマネーフォワード（Money Forward）を統合し、財務データ管理と記帳自動化を実現するRailsアプリケーションです。
+仕訳屋（Shiwakeya）は、Googleスプレッドシートとマネーフォワード（Money Forward）を統合し、財務データ管理と記帳自動化を実現するRailsアプリケーションです。
 
 ## 技術スタック
 
