@@ -6,6 +6,12 @@ class Sheet < ApplicationRecord
   scope :by_purpose, ->(purpose) { where(purpose: purpose) }
   scope :recently_synced, -> { order(last_synced_at: :desc) }
 
+  # SheetDataオブジェクトとして取得
+  def as_sheet_data
+    raw_data = spreadsheet.fetch_sheet_data(sheet_name)
+    SheetData.new(raw_data, sheet_name: sheet_name, spreadsheet_name: spreadsheet.name)
+  end
+
   def sync_data
     values = spreadsheet.fetch_sheet_data(sheet_name)
 

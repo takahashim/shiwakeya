@@ -9,26 +9,26 @@ class UuidBackfillService
     return if @spreadsheet.recently_edited?
 
     @spreadsheet.sheets.each do |sheet|
-      fill_missing_uuids(sheet.sheet_name)
+      fill_missing_uuids(sheet)
     end
   end
 
   private
 
-  def fill_missing_uuids(sheet_name)
-    sheet_data = @spreadsheet.load_sheet_data(sheet_name)
+  def fill_missing_uuids(sheet)
+    sheet_data = sheet.as_sheet_data
     return unless sheet_data.valid?
 
     missing = sheet_data.missing_uuid_rows
     return if missing.empty?
 
-    Rails.logger.info "Found #{missing.size} missing UUIDs in #{sheet_name}"
+    Rails.logger.info "Found #{missing.size} missing UUIDs in #{sheet.sheet_name}"
 
     missing.each_slice(BATCH_SIZE) do |batch|
-      update_batch(batch, sheet_name)
+      update_batch(batch, sheet.sheet_name)
     end
   rescue StandardError => e
-    Rails.logger.error "Failed to fill UUIDs for #{sheet_name}: #{e.message}"
+    Rails.logger.error "Failed to fill UUIDs for #{sheet.sheet_name}: #{e.message}"
   end
 
   def update_batch(rows, sheet_name)

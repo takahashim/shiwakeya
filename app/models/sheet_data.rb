@@ -55,6 +55,11 @@ class SheetData
     end
   end
 
+  # UUID付き行のみを返す
+  def rows_with_uuid
+    each_row_with_index.select { |row, _| uuid_for_row(row).present? }
+  end
+
   private
 
   def validate_uuid_column

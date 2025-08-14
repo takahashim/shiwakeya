@@ -1,4 +1,4 @@
-class SpreadsheetSync < ApplicationRecord
+class SyncedRow < ApplicationRecord
   belongs_to :spreadsheet
 
   # UUIDはスプレッドシートから取得した値を保存（Rails側では生成しない）
@@ -36,4 +36,22 @@ class SpreadsheetSync < ApplicationRecord
   def data_changed?(new_data)
     row_data != new_data
   end
+
+  # 削除済みマークを付ける
+  def mark_as_deleted!
+    update!(sync_status: :deleted)
+  end
+
+  # 更新が必要かどうかの判定
+  def should_update?(new_data)
+    new_record? || data_changed?(new_data)
+  end
+
+  # 存在しなくなったレコードを削除済みにマーク
+  scope :mark_missing_as_deleted, ->(spreadsheet_id, sheet_name, existing_uuids) {
+    by_sheet(spreadsheet_id, sheet_name)
+      .active
+      .where.not(uuid: existing_uuids)
+      .update_all(sync_status: :deleted)
+  }
 end
