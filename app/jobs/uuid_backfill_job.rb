@@ -5,14 +5,7 @@ class UuidBackfillJob < ApplicationJob
     spreadsheets = Spreadsheet.for_sync(id: spreadsheet_id)
 
     spreadsheets.each do |spreadsheet|
-      service = UuidBackfillService.new(spreadsheet)
-
-      if service.should_skip_backfill?
-        Rails.logger.info("Skipping UUID backfill for #{spreadsheet.name} - recent activity detected")
-        next
-      end
-
-      service.perform
+      UuidBackfillService.new(spreadsheet).perform
     end
   end
 end

@@ -1,24 +1,28 @@
 class SpreadsheetSyncService
   attr_reader :spreadsheet, :sheet_name
 
-  def initialize(spreadsheet, sheet_name = nil)
+  def initialize(spreadsheet, sheet_name)
     @spreadsheet = spreadsheet
-    @sheet_name = sheet_name || "Sheet1"
+    @sheet_name = sheet_name
   end
 
   # データ同期（UUID有りの行のみ）
   def sync_data
-    sheet_data = fetch_sheet_data
+    sheet_data = spreadsheet.load_sheet_data(sheet_name)
+
+    # バリデーション
+    unless sheet_data.valid?
+      raise InvalidSheetDataError.new(sheet_data)
+    end
+
     results = { synced: 0, skipped: 0, errors: [] }
 
     # 既存レコードを一旦全て削除済みマーク
     existing_syncs = SpreadsheetSync.by_sheet(spreadsheet.id, sheet_name).active
     existing_uuids = existing_syncs.pluck(:uuid)
 
-    sheet_data.each_with_index do |row, index|
-      next if index == 0 # ヘッダー行スキップ
-
-      uuid = row[0] # A列がUUID
+    sheet_data.each_row_with_index do |row, row_number|
+      uuid = sheet_data.uuid_for_row(row)
       next if uuid.blank? # UUIDなしはスキップ
 
       begin
@@ -29,7 +33,7 @@ class SpreadsheetSyncService
         )
 
         if sync_record.new_record? || sync_record.data_changed?(row)
-          sync_record.update_from_sheet(row, index + 1)
+          sync_record.update_from_sheet(row, row_number + 1)  # row_numberは0-based、Sheetは1-based
           results[:synced] += 1
         else
           results[:skipped] += 1
@@ -37,7 +41,7 @@ class SpreadsheetSyncService
 
         existing_uuids.delete(uuid)
       rescue => e
-        results[:errors] << { row: index + 1, error: e.message }
+        results[:errors] << { row: row_number + 1, error: e.message }
       end
     end
 

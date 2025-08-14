@@ -57,6 +57,12 @@ class Spreadsheet < ApplicationRecord
     raise
   end
 
+  # SheetDataオブジェクトとして取得
+  def load_sheet_data(sheet_name)
+    raw_data = fetch_sheet_data(sheet_name)
+    SheetData.new(raw_data, sheet_name: sheet_name, spreadsheet_name: name)
+  end
+
   def update_sheet_data(sheet_name, values)
     client = SpreadsheetClient.new(spreadsheet_id)
     client.update_sheet_data(sheet_name, values)

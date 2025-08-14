@@ -14,6 +14,40 @@ RSpec.describe DataSyncJob, type: :job do
       allow(sync_service).to receive(:sync_data).and_return(sync_result)
     end
 
+    context 'when sheet has invalid headers' do
+      let!(:sheet1) { create(:sheet, spreadsheet: spreadsheet) }
+
+      before do
+        invalid_sheet_data = SheetData.new([ [ "ID", "Name" ] ], sheet_name: sheet1.sheet_name, spreadsheet_name: spreadsheet.name)
+        invalid_sheet_data.valid? # trigger validation
+        allow(sync_service).to receive(:sync_data).and_raise(
+          InvalidSheetDataError.new(invalid_sheet_data)
+        )
+      end
+
+      it 'logs the error' do
+        allow(Rails.logger).to receive(:error)
+        expect(Rails.logger).to receive(:error).with(/Invalid sheet format/)
+        expect(Rails.logger).to receive(:error).with(/Sync errors/)
+
+        described_class.new.perform(spreadsheet.id)
+      end
+
+      it 'continues processing other sheets' do
+        create(:sheet, spreadsheet: spreadsheet, sheet_name: 'Sheet2')
+
+        invalid_sheet_data = SheetData.new([ [ "ID", "Name" ] ], sheet_name: "Sheet1", spreadsheet_name: spreadsheet.name)
+        invalid_sheet_data.valid?
+
+        # First sheet raises error, second sheet succeeds
+        allow(sync_service).to receive(:sync_data)
+          .and_raise(InvalidSheetDataError.new(invalid_sheet_data))
+          .and_return(sync_result)
+
+        expect { described_class.new.perform(spreadsheet.id) }.not_to raise_error
+      end
+    end
+
     context 'when no spreadsheet_id is provided' do
       let!(:active_spreadsheet) { create(:spreadsheet, is_active: true) }
       let!(:inactive_spreadsheet) { create(:spreadsheet, is_active: false) }

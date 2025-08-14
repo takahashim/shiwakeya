@@ -10,153 +10,136 @@ RSpec.describe UuidBackfillService do
         allow(spreadsheet).to receive(:recently_edited?).and_return(true)
       end
 
-      it 'skips processing and returns empty results' do
-        expect(service.perform).to eq([])
-      end
-
-      it 'does not process any sheets' do
-        create(:sheet, spreadsheet: spreadsheet)
-        expect(SpreadsheetSyncService).not_to receive(:new)
-
+      it 'skips processing' do
+        expect(spreadsheet).not_to receive(:sheets)
         service.perform
       end
     end
 
     context 'when spreadsheet was not recently edited' do
-      let(:sheet1) { create(:sheet, spreadsheet: spreadsheet) }
-      let(:sheet2) { create(:sheet, spreadsheet: spreadsheet) }
-      let(:sync_service1) { instance_double(SpreadsheetSyncService) }
-      let(:sync_service2) { instance_double(SpreadsheetSyncService) }
+      let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
+      let(:client) { instance_double(SpreadsheetClient) }
 
       before do
         allow(spreadsheet).to receive(:recently_edited?).and_return(false)
+        allow(SpreadsheetClient).to receive(:new).and_return(client)
       end
 
-      context 'when no UUIDs are missing' do
+      context 'with invalid sheet headers' do
+        let(:invalid_data) {
+          [ [ 'ID', 'Name' ], [ '', 'Test' ] ]
+        }
+
         before do
-          allow(SpreadsheetSyncService).to receive(:new)
-            .with(spreadsheet, sheet1.sheet_name)
-            .and_return(sync_service1)
-          allow(SpreadsheetSyncService).to receive(:new)
-            .with(spreadsheet, sheet2.sheet_name)
-            .and_return(sync_service2)
-          allow(sync_service1).to receive(:detect_missing_uuids).and_return([])
-          allow(sync_service2).to receive(:detect_missing_uuids).and_return([])
+          allow(spreadsheet).to receive(:fetch_sheet_data)
+            .with(sheet.sheet_name)
+            .and_return(invalid_data)
         end
 
-        it 'returns empty results' do
-          expect(service.perform).to eq([])
+        it 'skips invalid sheets' do
+          expect(client).not_to receive(:batch_update_values)
+          service.perform
         end
       end
 
-      context 'when UUIDs are missing' do
-        let(:missing_uuids) { Array.new(25) { |i| { row: i + 2 } } }
-        let(:backfill_result) { { count: 10, errors: [] } }
+      context 'with no missing UUIDs' do
+        let(:valid_data) {
+          [
+            [ 'UUID', 'Name' ],
+            [ 'uuid-1', 'Test1' ],
+            [ 'uuid-2', 'Test2' ]
+          ]
+        }
 
         before do
-          allow(SpreadsheetSyncService).to receive(:new)
-            .with(spreadsheet, sheet1.sheet_name)
-            .and_return(sync_service1)
-          allow(sync_service1).to receive(:detect_missing_uuids)
-            .and_return(missing_uuids)
-          allow(sync_service1).to receive(:backfill_uuids)
-            .and_return(backfill_result)
+          allow(spreadsheet).to receive(:fetch_sheet_data)
+            .with(sheet.sheet_name)
+            .and_return(valid_data)
         end
 
-        it 'processes missing UUIDs in batches' do
-          expect(sync_service1).to receive(:backfill_uuids).exactly(3).times
+        it 'does not update anything' do
+          expect(client).not_to receive(:batch_update_values)
+          service.perform
+        end
+      end
 
+      context 'with missing UUIDs' do
+        let(:data_with_missing) {
+          [
+            [ 'UUID', 'Name' ],
+            [ 'uuid-1', 'Test1' ],
+            [ '', 'Test2' ],
+            [ '', 'Test3' ]
+          ]
+        }
+
+        before do
+          allow(spreadsheet).to receive(:fetch_sheet_data)
+            .with(sheet.sheet_name)
+            .and_return(data_with_missing)
+          allow(client).to receive(:batch_update_values)
+        end
+
+        it 'updates missing UUIDs' do
+          expect(client).to receive(:batch_update_values).once
           service.perform
         end
 
-        it 'returns results for each batch' do
-          results = service.perform
-
-          expect(results.length).to eq(3)
-          expect(results.first).to include(
-            spreadsheet: spreadsheet.name,
-            sheet: sheet1.sheet_name,
-            batch: 1,
-            result: backfill_result
-          )
-        end
-
-        it 'logs information about missing UUIDs' do
-          # Allow other log messages
-          allow(Rails.logger).to receive(:info)
-
+        it 'logs found missing UUIDs' do
           expect(Rails.logger).to receive(:info)
-            .with(/Found 25 rows without UUID/)
-            .once
-
+            .with(/Found 2 missing UUIDs/)
           service.perform
         end
 
-        it 'logs batch results' do
-          # Allow the "Found X rows" message
-          allow(Rails.logger).to receive(:info).with(/Found 25 rows without UUID/)
+        context 'with more than BATCH_SIZE missing UUIDs' do
+          let(:large_data) {
+            [ [ 'UUID', 'Name' ] ] +
+            Array.new(25) { |i| [ i < 5 ? "uuid-#{i}" : '', "Test#{i}" ] }
+          }
 
-          # Expect the "Successfully generated" messages for each batch
-          expect(Rails.logger).to receive(:info)
-            .with(/Successfully generated/)
-            .exactly(3).times
+          before do
+            allow(spreadsheet).to receive(:fetch_sheet_data)
+              .with(sheet.sheet_name)
+              .and_return(large_data)
+          end
 
-          service.perform
-        end
-
-        it 'sleeps between batches' do
-          expect(service).to receive(:sleep).with(1).twice
-
-          service.perform
+          it 'processes in batches' do
+            # 20 missing UUIDs = 2 batches
+            expect(client).to receive(:batch_update_values).twice
+            service.perform
+          end
         end
       end
 
-      context 'when backfill has errors' do
-        let(:missing_uuids) { [ { row: 2 } ] }
-        let(:backfill_result) { { count: 0, errors: [ 'Failed to generate UUID' ] } }
+      context 'when update fails' do
+        let(:data_with_missing) {
+          [
+            [ 'UUID', 'Name' ],
+            [ '', 'Test' ]
+          ]
+        }
 
         before do
-          allow(SpreadsheetSyncService).to receive(:new)
-            .with(spreadsheet, sheet1.sheet_name)
-            .and_return(sync_service1)
-          allow(sync_service1).to receive(:detect_missing_uuids)
-            .and_return(missing_uuids)
-          allow(sync_service1).to receive(:backfill_uuids)
-            .and_return(backfill_result)
+          allow(spreadsheet).to receive(:fetch_sheet_data)
+            .with(sheet.sheet_name)
+            .and_return(data_with_missing)
+          allow(client).to receive(:batch_update_values)
+            .and_raise(StandardError.new('API Error'))
         end
 
-        it 'logs errors' do
+        it 'logs error and continues' do
           expect(Rails.logger).to receive(:error)
-            .with(/UUID backfill errors/)
+            .with(/Failed to fill UUIDs.*API Error/)
 
-          service.perform
-        end
-
-        it 'still returns results' do
-          results = service.perform
-
-          expect(results.length).to eq(1)
-          expect(results.first[:result][:errors]).to eq([ 'Failed to generate UUID' ])
+          expect { service.perform }.not_to raise_error
         end
       end
-    end
-  end
-
-  describe '#should_skip_backfill?' do
-    it 'delegates to spreadsheet.recently_edited?' do
-      expect(spreadsheet).to receive(:recently_edited?).and_return(true)
-
-      expect(service.should_skip_backfill?).to be true
     end
   end
 
   describe 'constants' do
     it 'defines BATCH_SIZE' do
       expect(described_class::BATCH_SIZE).to eq(10)
-    end
-
-    it 'defines BATCH_WAIT_TIME' do
-      expect(described_class::BATCH_WAIT_TIME).to eq(1)
     end
   end
 end
