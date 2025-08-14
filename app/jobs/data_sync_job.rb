@@ -17,9 +17,9 @@ class DataSyncJob < ApplicationJob
 
   def sync_sheet(spreadsheet, sheet)
     spreadsheet.sync_sheet(sheet)
-  rescue InvalidSheetDataError => e
+  rescue InvalidSheetError => e
     Rails.logger.error("Invalid sheet format: #{e.message}")
-    error_messages = e.sheet_data.errors.full_messages
+    error_messages = e.sheet.errors.full_messages
     { errors: error_messages, synced: 0, skipped: 0 }
   end
 

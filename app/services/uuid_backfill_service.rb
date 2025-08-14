@@ -16,10 +16,8 @@ class UuidBackfillService
   private
 
   def fill_missing_uuids(sheet)
-    sheet_data = sheet.as_sheet_data
-    return unless sheet_data.valid?
-
-    missing = sheet_data.missing_uuid_rows
+    missing = sheet.missing_uuid_rows
+    return if missing.empty?
     return if missing.empty?
 
     Rails.logger.info "Found #{missing.size} missing UUIDs in #{sheet.sheet_name}"

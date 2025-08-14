@@ -1,6 +1,29 @@
 require 'rails_helper'
 
 RSpec.describe Sheet, type: :model do
+  describe '#missing_uuid_rows' do
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
+
+    before do
+      raw_data = [
+        [ "UUID", "Name" ],
+        [ "uuid-1", "Item 1" ],
+        [ "", "Item 2" ],
+        [ nil, "Item 3" ],
+        [ "uuid-4", "Item 4" ]
+      ]
+      allow(spreadsheet).to receive(:fetch_sheet_data).and_return(raw_data)
+    end
+
+    it 'returns rows missing UUID' do
+      missing = sheet.missing_uuid_rows
+      expect(missing).to eq([
+        { row_number: 3 },  # "Item 2" at row 3
+        { row_number: 4 }   # "Item 3" at row 4
+      ])
+    end
+  end
   describe '.recently_synced' do
     let!(:recent_sheet) { create(:sheet, last_synced_at: 1.hour.ago) }
     let!(:old_sheet) { create(:sheet, last_synced_at: 1.week.ago) }
@@ -15,49 +38,69 @@ RSpec.describe Sheet, type: :model do
     end
   end
 
-  describe '#parsed_data' do
-    context 'when data is present' do
-      let(:sheet) { create(:sheet, data: '[["Header1", "Header2"], ["Value1", "Value2"]]') }
+  describe '#rows_data' do
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
 
-      it 'returns parsed JSON data' do
-        expect(sheet.parsed_data).to eq([ [ "Header1", "Header2" ], [ "Value1", "Value2" ] ])
+    context 'when synced_rows exist' do
+      let!(:row1) { create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 1, row_data: '["Value1", "Value2"]') }
+      let!(:row2) { create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 2, row_data: '["Value3", "Value4"]') }
+
+      it 'returns parsed row data in order' do
+        expect(sheet.rows_data).to eq([
+          [ "Value1", "Value2" ],
+          [ "Value3", "Value4" ]
+        ])
       end
     end
 
-    context 'when data is nil' do
-      let(:sheet) { create(:sheet, data: nil) }
-
+    context 'when no synced_rows exist' do
       it 'returns empty array' do
-        expect(sheet.parsed_data).to eq([])
+        expect(sheet.rows_data).to eq([])
       end
     end
 
-    context 'when data is invalid JSON' do
-      let(:sheet) { create(:sheet, data: 'invalid json') }
+    context 'when synced_rows have deleted status' do
+      let!(:active_row) { create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 1, row_data: '["Active"]', sync_status: :active) }
+      let!(:deleted_row) { create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 2, row_data: '["Deleted"]', sync_status: :deleted) }
 
-      it 'returns empty array' do
-        expect(sheet.parsed_data).to eq([])
+      it 'returns only active rows' do
+        expect(sheet.rows_data).to eq([ [ "Active" ] ])
       end
     end
   end
 
-  describe '#sync_data' do
+  describe '#sync_rows' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
-    let(:mock_values) { [ [ "Header1", "Header2" ], [ "Value1", "Value2" ] ] }
+    let(:mock_values) { [ [ "UUID", "Header2" ], [ "uuid-1", "Value2" ] ] }
 
     before do
       allow(spreadsheet).to receive(:fetch_sheet_data).and_return(mock_values)
     end
 
-    it 'updates data and last_synced_at' do
+    it 'creates synced_rows and updates last_synced_at' do
       freeze_time do
-        result = sheet.sync_data
+        result = sheet.sync_rows
+
+        expect(result[:synced]).to eq(1)
+        expect(result[:skipped]).to eq(0)
+        expect(result[:errors]).to be_empty
 
         sheet.reload
-        expect(sheet.data).to eq(mock_values.to_json)
         expect(sheet.last_synced_at).to eq(Time.current)
-        expect(result).to eq(mock_values)
+
+        synced_row = spreadsheet.synced_rows.first
+        expect(synced_row.uuid).to eq("uuid-1")
+        expect(synced_row.row_data).to eq([ "uuid-1", "Value2" ])
+      end
+    end
+
+    context 'when validation fails' do
+      let(:mock_values) { [ [ "ID", "Header2" ], [ "uuid-1", "Value2" ] ] }
+
+      it 'raises InvalidSheetError' do
+        expect { sheet.sync_rows }.to raise_error(InvalidSheetError)
       end
     end
 
@@ -68,43 +111,45 @@ RSpec.describe Sheet, type: :model do
 
       it 'logs error and raises' do
         expect(Rails.logger).to receive(:error).at_least(:once)
-        expect { sheet.sync_data }.to raise_error(StandardError, 'API Error')
+        expect { sheet.sync_rows }.to raise_error(StandardError, 'API Error')
       end
     end
   end
 
   describe '#clear_local_data' do
-    let(:sheet) { create(:sheet, :with_data) }
+    let(:spreadsheet) { create(:spreadsheet) }
+    let(:sheet) { create(:sheet, spreadsheet: spreadsheet, last_synced_at: 1.hour.ago) }
+    let!(:synced_row) { create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name) }
 
-    it 'clears data and last_synced_at' do
-      result = sheet.clear_local_data
+    it 'deletes synced_rows and clears last_synced_at' do
+      expect { sheet.clear_local_data }.to change { spreadsheet.synced_rows.count }.by(-1)
 
       sheet.reload
-      expect(sheet.data).to be_nil
       expect(sheet.last_synced_at).to be_nil
-      expect(result).to be_truthy
     end
   end
 
   describe '#write_data' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:sheet) { create(:sheet, spreadsheet: spreadsheet) }
-    let(:values) { [ [ "New1", "New2" ], [ "Value1", "Value2" ] ] }
+    let(:values) { [ [ "UUID", "New2" ], [ "uuid-1", "Value2" ] ] }
 
     context 'when write is successful' do
       before do
         allow(spreadsheet).to receive(:update_sheet_data).and_return(true)
       end
 
-      it 'writes data and updates local storage' do
-        freeze_time do
-          result = sheet.write_data(values)
+      before do
+        allow(spreadsheet).to receive(:fetch_sheet_data).and_return(values)
+      end
 
-          expect(result).to be true
-          sheet.reload
-          expect(sheet.data).to eq(values.to_json)
-          expect(sheet.last_synced_at).to eq(Time.current)
-        end
+      it 'writes data and syncs rows' do
+        result = sheet.write_data(values)
+
+        expect(result).to be_truthy
+        expect(spreadsheet.synced_rows.count).to eq(1)
+        synced_row = spreadsheet.synced_rows.first
+        expect(synced_row.uuid).to eq("uuid-1")
       end
     end
 
@@ -113,16 +158,11 @@ RSpec.describe Sheet, type: :model do
         allow(spreadsheet).to receive(:update_sheet_data).and_return(false)
       end
 
-      it 'returns false and does not update local storage' do
-        original_data = sheet.data
-        original_sync_time = sheet.last_synced_at
-
+      it 'returns false and does not sync' do
         result = sheet.write_data(values)
 
         expect(result).to be false
-        sheet.reload
-        expect(sheet.data).to eq(original_data)
-        expect(sheet.last_synced_at).to eq(original_sync_time)
+        expect(spreadsheet.synced_rows.count).to eq(0)
       end
     end
   end

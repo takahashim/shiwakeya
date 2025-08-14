@@ -16,7 +16,11 @@ RSpec.describe "Sheets", type: :request do
       end
 
       it "displays sheet data" do
-        sheet.update(sheet_name: "Test Sheet", data: '[["Header1", "Header2"], ["Data1", "Data2"]]')
+        sheet.update(sheet_name: "Test Sheet")
+        # Create SyncedRow data
+        create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 1, row_data: '["Header1", "Header2"]')
+        create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name, row_number: 2, row_data: '["Data1", "Data2"]')
+
         get spreadsheet_sheet_path(spreadsheet, sheet)
         expect(response.body).to include("Test Sheet")
         expect(response.body).to include("Header1")
@@ -25,7 +29,7 @@ RSpec.describe "Sheets", type: :request do
 
       context "when sheet has no data" do
         it "displays no data message" do
-          sheet.update(data: nil)
+          # No synced_rows means no data
           get spreadsheet_sheet_path(spreadsheet, sheet)
           expect(response.body).to include("データがありません")
         end
@@ -44,7 +48,7 @@ RSpec.describe "Sheets", type: :request do
   end
 
   describe "POST /spreadsheets/:spreadsheet_id/sheets/:sheet_id/sync" do
-    let(:mock_values) { [ [ "New Data" ] ] }
+    let(:mock_values) { [ [ "UUID", "Name" ], [ "uuid-1", "Test Data" ] ] }
 
     before do
       allow_any_instance_of(Spreadsheet).to receive(:fetch_sheet_data).and_return(mock_values)
@@ -60,7 +64,7 @@ RSpec.describe "Sheets", type: :request do
         expect(flash[:notice]).to eq("データを同期しました")
 
         sheet.reload
-        expect(sheet.data).to eq(mock_values.to_json)
+        expect(sheet.last_synced_at).not_to be_nil
       end
     end
 
@@ -160,7 +164,8 @@ RSpec.describe "Sheets", type: :request do
       before { login_as(admin_user) }
 
       it "clears local data and redirects" do
-        sheet.update(data: '[["Data"]]', last_synced_at: Time.current)
+        sheet.update(last_synced_at: Time.current)
+        create(:synced_row, spreadsheet: spreadsheet, sheet_name: sheet.sheet_name)
 
         delete spreadsheet_sheet_clear_path(spreadsheet, sheet)
 
@@ -168,8 +173,8 @@ RSpec.describe "Sheets", type: :request do
         expect(flash[:notice]).to eq("データをクリアしました")
 
         sheet.reload
-        expect(sheet.data).to be_nil
         expect(sheet.last_synced_at).to be_nil
+        expect(spreadsheet.synced_rows.by_sheet(spreadsheet.id, sheet.sheet_name).count).to eq(0)
       end
 
       context "when clear fails" do

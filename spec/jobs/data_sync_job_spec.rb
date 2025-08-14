@@ -12,17 +12,18 @@ RSpec.describe DataSyncJob, type: :job do
       let!(:sheet1) { create(:sheet, spreadsheet: spreadsheet) }
 
       before do
-        invalid_sheet_data = SheetData.new([ [ "ID", "Name" ] ], sheet_name: sheet1.sheet_name, spreadsheet_name: spreadsheet.name)
-        invalid_sheet_data.valid? # trigger validation
-        allow_any_instance_of(Spreadsheet).to receive(:sync_sheet).and_raise(
-          InvalidSheetDataError.new(invalid_sheet_data)
-        )
+        # Mock the Google Sheets API to return invalid headers
+        mock_client = instance_double(SpreadsheetClient)
+        allow(SpreadsheetClient).to receive(:new).and_return(mock_client)
+        allow(mock_client).to receive(:fetch_sheet_data).and_return([ [ "ID", "Name" ] ])
       end
 
       it 'logs the error' do
-        allow(Rails.logger).to receive(:error)
+        # Three error logs: one from Sheet#sync_rows, one from DataSyncJob#sync_sheet, and one from log_sync_result
+        expect(Rails.logger).to receive(:error).with(/Error syncing sheet rows/)
         expect(Rails.logger).to receive(:error).with(/Invalid sheet format/)
         expect(Rails.logger).to receive(:error).with(/Sync errors/)
+        expect(Rails.logger).to receive(:error).at_least(:once)  # For stack trace
 
         described_class.new.perform(spreadsheet.id)
       end
@@ -30,17 +31,14 @@ RSpec.describe DataSyncJob, type: :job do
       it 'continues processing other sheets' do
         create(:sheet, spreadsheet: spreadsheet, sheet_name: 'Sheet2')
 
-        invalid_sheet_data = SheetData.new([ [ "ID", "Name" ] ], sheet_name: "Sheet1", spreadsheet_name: spreadsheet.name)
-        invalid_sheet_data.valid?
-
-        # First sheet raises error, second sheet succeeds
+        # First sheet will have invalid headers, second will succeed
         call_count = 0
-        allow_any_instance_of(Spreadsheet).to receive(:sync_sheet) do
+        allow(spreadsheet).to receive(:fetch_sheet_data) do
           call_count += 1
           if call_count == 1
-            raise InvalidSheetDataError.new(invalid_sheet_data)
+            [ [ "ID", "Name" ] ]  # Invalid headers
           else
-            sync_result
+            [ [ "UUID", "Name" ], [ "uuid-1", "Test" ] ]  # Valid headers
           end
         end
 

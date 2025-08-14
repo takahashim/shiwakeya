@@ -10,13 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_170619) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_14_054717) do
   create_table "sheets", force: :cascade do |t|
     t.integer "spreadsheet_id", null: false
     t.string "sheet_name"
     t.string "purpose"
     t.datetime "last_synced_at"
-    t.text "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["spreadsheet_id"], name: "index_sheets_on_spreadsheet_id"

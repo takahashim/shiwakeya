@@ -5,7 +5,7 @@ class Sheets::SyncsController < ApplicationController
   before_action :check_spreadsheet_access_permission
 
   def create
-    @sheet.sync_data
+    @sheet.sync_rows
     redirect_to spreadsheet_sheet_path(@spreadsheet, @sheet),
                 notice: "データを同期しました"
   end

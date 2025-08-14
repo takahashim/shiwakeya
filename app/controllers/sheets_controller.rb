@@ -5,7 +5,7 @@ class SheetsController < ApplicationController
   before_action :set_sheet, only: [ :show, :update ]
 
   def show
-    @data = @sheet.parsed_data
+    @data = @sheet.rows_data
   end
 
   def update

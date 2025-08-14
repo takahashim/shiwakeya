@@ -61,42 +61,7 @@ class Spreadsheet < ApplicationRecord
 
   # シートのデータを同期
   def sync_sheet(sheet)
-    sheet_data = sheet.as_sheet_data
-
-    unless sheet_data.valid?
-      raise InvalidSheetDataError.new(sheet_data)
-    end
-
-    synced_uuids = []
-    results = { synced: 0, skipped: 0, errors: [] }
-
-    SyncedRow.transaction do
-      sheet_data.rows_with_uuid.each do |row, row_number|
-        uuid = sheet_data.uuid_for_row(row)
-        synced_uuids << uuid
-
-        begin
-          sync_record = synced_rows.find_or_initialize_by(
-            uuid: uuid,
-            sheet_name: sheet.sheet_name
-          )
-
-          if sync_record.should_update?(row)
-            sync_record.update_from_sheet(row, row_number + 1)  # row_numberは1-based
-            results[:synced] += 1
-          else
-            results[:skipped] += 1
-          end
-        rescue => e
-          results[:errors] << { row: row_number + 1, error: e.message }
-        end
-      end
-
-      # 存在しなくなったレコードを削除済みに
-      SyncedRow.mark_missing_as_deleted(id, sheet.sheet_name, synced_uuids)
-    end
-
-    results
+    sheet.sync_rows
   end
 
   def update_sheet_data(sheet_name, values)
