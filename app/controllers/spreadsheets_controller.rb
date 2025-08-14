@@ -31,7 +31,7 @@ class SpreadsheetsController < ApplicationController
       end
 
       if @spreadsheet.save
-        @spreadsheet.sync_sheets
+        @spreadsheet.sync_spreadsheet
         redirect_to @spreadsheet, notice: "スプレッドシートを登録しました"
       else
         render :new, status: :unprocessable_content

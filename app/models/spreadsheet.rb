@@ -16,7 +16,7 @@ class Spreadsheet < ApplicationRecord
     id ? where(id: id) : active
   end
 
-  def sync_sheets
+  def sync_spreadsheet
     client = SpreadsheetClient.new(spreadsheet_id)
     spreadsheet = client.spreadsheet
 

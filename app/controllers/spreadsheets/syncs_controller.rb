@@ -4,7 +4,7 @@ class Spreadsheets::SyncsController < ApplicationController
   before_action :check_spreadsheet_access_permission
 
   def create
-    @spreadsheet.sync_sheets
+    @spreadsheet.sync_spreadsheet
     redirect_to @spreadsheet, notice: "シート情報を同期しました"
   end
 

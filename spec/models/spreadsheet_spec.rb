@@ -119,7 +119,7 @@ RSpec.describe Spreadsheet, type: :model do
     end
   end
 
-  describe '#sync_sheets' do
+  describe '#sync_spreadsheet' do
     let(:spreadsheet) { create(:spreadsheet) }
     let(:mock_client) { instance_double(SpreadsheetClient) }
     let(:mock_google_spreadsheet) { double('Google::Apis::SheetsV4::Spreadsheet') }
@@ -132,7 +132,7 @@ RSpec.describe Spreadsheet, type: :model do
     end
 
     it 'creates new sheets from Google Sheets' do
-      expect { spreadsheet.sync_sheets }.to change { spreadsheet.sheets.count }.by(1)
+      expect { spreadsheet.sync_spreadsheet }.to change { spreadsheet.sheets.count }.by(1)
       expect(spreadsheet.sheets.last.sheet_name).to eq('Sheet1')
     end
 
@@ -142,7 +142,7 @@ RSpec.describe Spreadsheet, type: :model do
       end
 
       it 'does not create duplicate sheets' do
-        expect { spreadsheet.sync_sheets }.not_to change { spreadsheet.sheets.count }
+        expect { spreadsheet.sync_spreadsheet }.not_to change { spreadsheet.sheets.count }
       end
     end
   end
