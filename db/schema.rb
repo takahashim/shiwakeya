@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_14_032639) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_170619) do
   create_table "sheets", force: :cascade do |t|
     t.integer "spreadsheet_id", null: false
     t.string "sheet_name"
